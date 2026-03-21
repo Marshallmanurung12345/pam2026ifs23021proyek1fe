@@ -38,16 +38,26 @@ class AuthViewModel @Inject constructor(
             val result = authRepository.login(username, password)
             result.fold(
                 onSuccess = { response ->
-                    val loggedIn = response.resolveToken() != null
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        isLoggedIn = loggedIn,
-                        error = if (!loggedIn) (response.message ?: "Login gagal") else null
-                    )
+                    val token = response.resolveToken()
+                    if (token != null) {
+                        // Login berhasil - set isLoggedIn true untuk trigger navigasi
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            isLoggedIn = true,
+                            error = null
+                        )
+                    } else {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            isLoggedIn = false,
+                            error = response.message ?: "Login gagal"
+                        )
+                    }
                 },
                 onFailure = { e ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
+                        isLoggedIn = false,
                         error = e.message ?: "Login gagal"
                     )
                 }

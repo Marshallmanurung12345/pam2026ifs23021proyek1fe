@@ -26,17 +26,15 @@ fun LoginScreen(
     onNavigateToRegister: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val token by viewModel.authToken.collectAsState()
 
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    LaunchedEffect(token) {
-        if (token != null) onLoginSuccess()
-    }
-
+    // Navigasi saat isLoggedIn = true
     LaunchedEffect(uiState.isLoggedIn) {
-        if (uiState.isLoggedIn) onLoginSuccess()
+        if (uiState.isLoggedIn) {
+            onLoginSuccess()
+        }
     }
 
     Box(
@@ -52,7 +50,6 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Logo
             Box(
                 modifier = Modifier
                     .size(100.dp)
