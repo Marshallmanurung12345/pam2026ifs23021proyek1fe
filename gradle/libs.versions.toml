@@ -23,7 +23,6 @@ lifecycleViewmodelCompose = "2.8.7"
 hiltNavigationCompose = "1.2.0"
 ksp = "2.1.0-1.0.29"
 daggerHilt = "2.51.1"
-coreKtxVersion = "1.18.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -56,7 +55,6 @@ hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "dagge
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "daggerHilt" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtxVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
