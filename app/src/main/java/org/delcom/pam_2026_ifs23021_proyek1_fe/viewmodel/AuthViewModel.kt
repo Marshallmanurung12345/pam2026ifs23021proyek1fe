@@ -24,13 +24,13 @@ class AuthViewModel @Inject constructor(
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
     val authToken: StateFlow<String?> = authRepository.getAuthToken()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val userName: StateFlow<String?> = authRepository.getName()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val userRole: StateFlow<String?> = authRepository.getRole()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     fun login(username: String, password: String) {
         viewModelScope.launch {
@@ -40,7 +40,6 @@ class AuthViewModel @Inject constructor(
                 onSuccess = { response ->
                     val token = response.resolveToken()
                     if (token != null) {
-                        // Login berhasil - set isLoggedIn true untuk trigger navigasi
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             isLoggedIn = true,
@@ -50,7 +49,7 @@ class AuthViewModel @Inject constructor(
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             isLoggedIn = false,
-                            error = response.message ?: "Login gagal"
+                            error = response.message ?: "Login gagal, periksa username/password"
                         )
                     }
                 },

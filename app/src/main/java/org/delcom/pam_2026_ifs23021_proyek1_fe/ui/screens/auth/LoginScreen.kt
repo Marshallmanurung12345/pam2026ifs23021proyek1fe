@@ -30,7 +30,6 @@ fun LoginScreen(
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    // Navigasi saat isLoggedIn = true
     LaunchedEffect(uiState.isLoggedIn) {
         if (uiState.isLoggedIn) {
             onLoginSuccess()
@@ -116,7 +115,9 @@ fun LoginScreen(
                             viewModel.clearMessages()
                             viewModel.login(username, password)
                         },
-                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
                         enabled = !uiState.isLoading && username.isNotBlank() && password.isNotBlank(),
                         shape = RoundedCornerShape(12.dp)
                     ) {

@@ -1,29 +1,28 @@
 package org.delcom.pam_2026_ifs23021_proyek1_fe.ui.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.*
 import androidx.navigation.compose.*
-import kotlinx.coroutines.flow.collectLatest
 import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.auth.LoginScreen
 import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.auth.RegisterScreen
-import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.home.HomeScreen
 import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.order.*
 import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.laundryitem.*
-import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.profile.ProfileScreen
 import org.delcom.pam_2026_ifs23021_proyek1_fe.viewmodel.AuthViewModel
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
     object Home : Screen("home")
-    object OrderList : Screen("orders")
     object OrderDetail : Screen("orders/{orderId}") {
         fun createRoute(id: Int) = "orders/$id"
     }
     object OrderCreate : Screen("orders/create")
-    object LaundryItemList : Screen("laundry-items")
     object LaundryItemDetail : Screen("laundry-items/{itemId}") {
         fun createRoute(id: Int) = "laundry-items/$id"
     }
@@ -31,34 +30,50 @@ sealed class Screen(val route: String) {
     object LaundryItemEdit : Screen("laundry-items/{itemId}/edit") {
         fun createRoute(id: Int) = "laundry-items/$id/edit"
     }
-    object Profile : Screen("profile")
 }
 
 @Composable
 fun AppNavGraph(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = hiltViewModel()
+    val uiState by authViewModel.uiState.collectAsState()
     val token by authViewModel.authToken.collectAsState()
 
-    val startDestination = if (token != null) Screen.Home.route else Screen.Login.route
+    // Tunggu token selesai di-load dari DataStore
+    // token == null bisa berarti "belum dimuat" atau "memang tidak ada"
+    // Kita pakai flag initialized
+    var initialized by remember { mutableStateOf(false) }
+
+    LaunchedEffect(token) {
+        // Setelah pertama kali token di-emit (baik null maupun ada isinya), set initialized
+        initialized = true
+    }
+
+    if (!initialized) {
+        // Tampilkan loading sambil tunggu DataStore
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
 
     NavHost(
         navController = navController,
-        startDestination = startDestination,
+        startDestination = if (token != null) Screen.Home.route else Screen.Login.route,
         modifier = modifier
     ) {
-        // Auth
         composable(Screen.Login.route) {
             LoginScreen(
                 viewModel = authViewModel,
                 onLoginSuccess = {
                     navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                     }
                 },
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) }
             )
         }
+
         composable(Screen.Register.route) {
             RegisterScreen(
                 viewModel = authViewModel,
@@ -67,7 +82,6 @@ fun AppNavGraph(modifier: Modifier = Modifier) {
             )
         }
 
-        // Main with Bottom Nav
         composable(Screen.Home.route) {
             MainScreen(
                 authViewModel = authViewModel,
@@ -94,7 +108,6 @@ fun AppNavGraph(modifier: Modifier = Modifier) {
             )
         }
 
-        // Order Detail
         composable(
             Screen.OrderDetail.route,
             arguments = listOf(navArgument("orderId") { type = NavType.IntType })
@@ -104,13 +117,10 @@ fun AppNavGraph(modifier: Modifier = Modifier) {
                 orderId = orderId,
                 token = token ?: "",
                 onBack = { navController.popBackStack() },
-                onDeleted = {
-                    navController.popBackStack()
-                }
+                onDeleted = { navController.popBackStack() }
             )
         }
 
-        // Order Create
         composable(Screen.OrderCreate.route) {
             OrderCreateScreen(
                 token = token ?: "",
@@ -119,7 +129,6 @@ fun AppNavGraph(modifier: Modifier = Modifier) {
             )
         }
 
-        // Laundry Item Detail
         composable(
             Screen.LaundryItemDetail.route,
             arguments = listOf(navArgument("itemId") { type = NavType.IntType })
@@ -134,7 +143,6 @@ fun AppNavGraph(modifier: Modifier = Modifier) {
             )
         }
 
-        // Laundry Item Create
         composable(Screen.LaundryItemCreate.route) {
             LaundryItemFormScreen(
                 token = token ?: "",
@@ -144,7 +152,6 @@ fun AppNavGraph(modifier: Modifier = Modifier) {
             )
         }
 
-        // Laundry Item Edit
         composable(
             Screen.LaundryItemEdit.route,
             arguments = listOf(navArgument("itemId") { type = NavType.IntType })
