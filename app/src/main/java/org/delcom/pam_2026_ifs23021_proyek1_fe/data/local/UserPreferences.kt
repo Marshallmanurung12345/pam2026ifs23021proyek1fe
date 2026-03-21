@@ -19,51 +19,35 @@ class UserPreferences @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     companion object {
-        val TOKEN_KEY = stringPreferencesKey("auth_token")
-        val USERNAME_KEY = stringPreferencesKey("username")
-        val NAME_KEY = stringPreferencesKey("name")
-        val ROLE_KEY = stringPreferencesKey("role")
+        val AUTH_TOKEN_KEY = stringPreferencesKey("auth_token")
+        val REFRESH_TOKEN_KEY = stringPreferencesKey("refresh_token")
         val USER_ID_KEY = stringPreferencesKey("user_id")
+        val USER_NAME_KEY = stringPreferencesKey("user_name")
+        val USERNAME_KEY = stringPreferencesKey("username")
     }
 
-    val authToken: Flow<String?> = context.dataStore.data.map { prefs ->
-        prefs[TOKEN_KEY]
-    }
+    val authToken: Flow<String?> = context.dataStore.data.map { it[AUTH_TOKEN_KEY] }
+    val refreshToken: Flow<String?> = context.dataStore.data.map { it[REFRESH_TOKEN_KEY] }
+    val userId: Flow<String?> = context.dataStore.data.map { it[USER_ID_KEY] }
+    val userName: Flow<String?> = context.dataStore.data.map { it[USER_NAME_KEY] }
+    val username: Flow<String?> = context.dataStore.data.map { it[USERNAME_KEY] }
 
-    val username: Flow<String?> = context.dataStore.data.map { prefs ->
-        prefs[USERNAME_KEY]
-    }
-
-    val name: Flow<String?> = context.dataStore.data.map { prefs ->
-        prefs[NAME_KEY]
-    }
-
-    val role: Flow<String?> = context.dataStore.data.map { prefs ->
-        prefs[ROLE_KEY]
-    }
-
-    val userId: Flow<String?> = context.dataStore.data.map { prefs ->
-        prefs[USER_ID_KEY]
-    }
-
-    suspend fun saveAuthToken(token: String) {
+    suspend fun saveTokens(authToken: String, refreshToken: String) {
         context.dataStore.edit { prefs ->
-            prefs[TOKEN_KEY] = token
+            prefs[AUTH_TOKEN_KEY] = authToken
+            prefs[REFRESH_TOKEN_KEY] = refreshToken
         }
     }
 
-    suspend fun saveUserInfo(id: Int, name: String, username: String, role: String) {
+    suspend fun saveUserInfo(id: String, name: String, username: String) {
         context.dataStore.edit { prefs ->
-            prefs[USER_ID_KEY] = id.toString()
-            prefs[NAME_KEY] = name
+            prefs[USER_ID_KEY] = id
+            prefs[USER_NAME_KEY] = name
             prefs[USERNAME_KEY] = username
-            prefs[ROLE_KEY] = role
         }
     }
 
     suspend fun clearAll() {
-        context.dataStore.edit { prefs ->
-            prefs.clear()
-        }
+        context.dataStore.edit { it.clear() }
     }
 }

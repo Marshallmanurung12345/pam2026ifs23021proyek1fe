@@ -6,59 +6,43 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.home.HomeScreen
 import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.order.OrderListScreen
-import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.laundryitem.LaundryItemListScreen
+import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.laundryitem.LaundryServiceListScreen
 import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.profile.ProfileScreen
 import org.delcom.pam_2026_ifs23021_proyek1_fe.viewmodel.AuthViewModel
-
-data class BottomNavItem(
-    val label: String,
-    val icon: ImageVector,
-    val route: String
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     authViewModel: AuthViewModel,
     onLogout: () -> Unit,
-    onNavigateToOrderDetail: (Int) -> Unit,
+    onNavigateToOrderDetail: (String) -> Unit,
     onNavigateToOrderCreate: () -> Unit,
-    onNavigateToItemDetail: (Int) -> Unit,
-    onNavigateToItemCreate: () -> Unit,
-    onNavigateToItemEdit: (Int) -> Unit
+    onNavigateToServiceDetail: (String) -> Unit,
+    onNavigateToServiceCreate: () -> Unit,
+    onNavigateToServiceEdit: (String) -> Unit
 ) {
     val token by authViewModel.authToken.collectAsState()
     val navController = rememberNavController()
-
-    val bottomNavItems = listOf(
-        BottomNavItem("Beranda", Icons.Filled.Home, "main_home"),
-        BottomNavItem("Pesanan", Icons.Filled.List, "main_orders"),
-        BottomNavItem("Layanan", Icons.Filled.LocalLaundryService, "main_items"),
-        BottomNavItem("Profil", Icons.Filled.Person, "main_profile")
-    )
-
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
+    val currentRoute = navBackStackEntry?.destination?.route
 
-    val currentRoute = currentDestination?.route
-    val currentTitle = when (currentRoute) {
+    val title = when (currentRoute) {
         "main_home" -> "Beranda"
-        "main_orders" -> "Daftar Pesanan"
-        "main_items" -> "Layanan Laundry"
-        "main_profile" -> "Profil Saya"
-        else -> "Laundry App"
+        "main_orders" -> "Pesanan"
+        "main_services" -> "Layanan"
+        "main_profile" -> "Profil"
+        else -> "LaundryKu"
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(currentTitle) },
+                title = { Text(title) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -67,16 +51,19 @@ fun MainScreen(
         },
         bottomBar = {
             NavigationBar {
-                bottomNavItems.forEach { item ->
+                listOf(
+                    Triple("main_home", Icons.Filled.Home, "Beranda"),
+                    Triple("main_orders", Icons.Filled.List, "Pesanan"),
+                    Triple("main_services", Icons.Filled.LocalLaundryService, "Layanan"),
+                    Triple("main_profile", Icons.Filled.Person, "Profil")
+                ).forEach { (route, icon, label) ->
                     NavigationBarItem(
-                        icon = { Icon(item.icon, contentDescription = item.label) },
-                        label = { Text(item.label) },
-                        selected = currentDestination?.hierarchy?.any { it.route == item.route } == true,
+                        icon = { Icon(icon, label) },
+                        label = { Text(label) },
+                        selected = navBackStackEntry?.destination?.hierarchy?.any { it.route == route } == true,
                         onClick = {
-                            navController.navigate(item.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
+                            navController.navigate(route) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
                             }
@@ -85,18 +72,14 @@ fun MainScreen(
                 }
             }
         }
-    ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = "main_home",
-            modifier = Modifier.padding(innerPadding)
-        ) {
+    ) { padding ->
+        NavHost(navController, startDestination = "main_home", modifier = Modifier.padding(padding)) {
             composable("main_home") {
                 HomeScreen(
                     token = token ?: "",
                     authViewModel = authViewModel,
                     onNavigateToOrders = { navController.navigate("main_orders") },
-                    onNavigateToItems = { navController.navigate("main_items") }
+                    onNavigateToServices = { navController.navigate("main_services") }
                 )
             }
             composable("main_orders") {
@@ -106,18 +89,15 @@ fun MainScreen(
                     onNavigateToCreate = onNavigateToOrderCreate
                 )
             }
-            composable("main_items") {
-                LaundryItemListScreen(
+            composable("main_services") {
+                LaundryServiceListScreen(
                     token = token ?: "",
-                    onNavigateToDetail = onNavigateToItemDetail,
-                    onNavigateToCreate = onNavigateToItemCreate
+                    onNavigateToDetail = onNavigateToServiceDetail,
+                    onNavigateToCreate = onNavigateToServiceCreate
                 )
             }
             composable("main_profile") {
-                ProfileScreen(
-                    authViewModel = authViewModel,
-                    onLogout = onLogout
-                )
+                ProfileScreen(authViewModel = authViewModel, onLogout = onLogout)
             }
         }
     }

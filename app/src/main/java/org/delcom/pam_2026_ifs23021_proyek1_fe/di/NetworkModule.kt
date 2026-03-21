@@ -30,6 +30,7 @@ object NetworkModule {
         ignoreUnknownKeys = true
         isLenient = true
         coerceInputValues = true
+        explicitNulls = false
     }
 
     @Provides
@@ -38,18 +39,14 @@ object NetworkModule {
         val logging = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
-
-        // Trust manager yang menerima semua certificate (untuk development)
         val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
             override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {}
             override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {}
             override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
         })
-
         val sslContext = SSLContext.getInstance("SSL").apply {
             init(null, trustAllCerts, SecureRandom())
         }
-
         return OkHttpClient.Builder()
             .addInterceptor(logging)
             .sslSocketFactory(sslContext.socketFactory, trustAllCerts[0] as X509TrustManager)
@@ -71,23 +68,19 @@ object NetworkModule {
             .build()
     }
 
-    @Provides
-    @Singleton
+    @Provides @Singleton
     fun provideAuthApiService(retrofit: Retrofit): AuthApiService =
         retrofit.create(AuthApiService::class.java)
 
-    @Provides
-    @Singleton
+    @Provides @Singleton
     fun provideUserApiService(retrofit: Retrofit): UserApiService =
         retrofit.create(UserApiService::class.java)
 
-    @Provides
-    @Singleton
-    fun provideLaundryItemApiService(retrofit: Retrofit): LaundryItemApiService =
-        retrofit.create(LaundryItemApiService::class.java)
+    @Provides @Singleton
+    fun provideLaundryServiceApiService(retrofit: Retrofit): LaundryServiceApiService =
+        retrofit.create(LaundryServiceApiService::class.java)
 
-    @Provides
-    @Singleton
-    fun provideOrderApiService(retrofit: Retrofit): OrderApiService =
-        retrofit.create(OrderApiService::class.java)
+    @Provides @Singleton
+    fun provideLaundryOrderApiService(retrofit: Retrofit): LaundryOrderApiService =
+        retrofit.create(LaundryOrderApiService::class.java)
 }

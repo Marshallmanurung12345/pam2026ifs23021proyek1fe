@@ -5,98 +5,97 @@ import retrofit2.Response
 import retrofit2.http.*
 
 interface AuthApiService {
-
-    // Coba salah satu endpoint ini sesuai backend kamu:
-    // Option 1: /api/auth/login  (paling umum)
-    // Option 2: /auth/login
-    // Option 3: /api/users/login
-    // Option 4: /login
+    @POST("auth/login")
+    suspend fun login(@Body request: LoginRequest): Response<AuthResponse>
 
     @POST("auth/register")
     suspend fun register(@Body request: RegisterRequest): Response<AuthResponse>
-
-    @POST("auth/login")
-    suspend fun login(@Body request: LoginRequest): Response<AuthResponse>
 }
 
 interface UserApiService {
     @GET("users/me")
-    suspend fun getProfile(@Header("Authorization") token: String): Response<UserResponse>
+    suspend fun getMe(@Header("Authorization") token: String): Response<UserMeResponse>
 
     @PUT("users/me")
-    suspend fun updateProfile(
+    suspend fun updateMe(
         @Header("Authorization") token: String,
-        @Body user: User
-    ): Response<UserResponse>
-}
-
-interface LaundryItemApiService {
-    @GET("laundry-items")
-    suspend fun getLaundryItems(
-        @Header("Authorization") token: String,
-        @Query("page") page: Int = 1,
-        @Query("per_page") perPage: Int = 10,
-        @Query("search") search: String? = null
-    ): Response<LaundryItemListResponse>
-
-    @GET("laundry-items/{id}")
-    suspend fun getLaundryItem(
-        @Header("Authorization") token: String,
-        @Path("id") id: Int
-    ): Response<LaundryItemResponse>
-
-    @POST("laundry-items")
-    suspend fun createLaundryItem(
-        @Header("Authorization") token: String,
-        @Body request: CreateLaundryItemRequest
-    ): Response<LaundryItemResponse>
-
-    @PUT("laundry-items/{id}")
-    suspend fun updateLaundryItem(
-        @Header("Authorization") token: String,
-        @Path("id") id: Int,
-        @Body request: CreateLaundryItemRequest
-    ): Response<LaundryItemResponse>
-
-    @DELETE("laundry-items/{id}")
-    suspend fun deleteLaundryItem(
-        @Header("Authorization") token: String,
-        @Path("id") id: Int
+        @Body request: Map<String, String>
     ): Response<BaseResponse>
 }
 
-interface OrderApiService {
-    @GET("orders")
-    suspend fun getOrders(
+interface LaundryServiceApiService {
+    @GET("laundry-services")
+    suspend fun getAll(
         @Header("Authorization") token: String,
-        @Query("page") page: Int = 1,
-        @Query("per_page") perPage: Int = 10,
         @Query("search") search: String? = null,
-        @Query("status") status: String? = null
-    ): Response<OrderListResponse>
+        @Query("isActive") isActive: Boolean? = null
+    ): Response<LaundryServiceListResponse>
 
-    @GET("orders/{id}")
-    suspend fun getOrder(
+    @GET("laundry-services/{id}")
+    suspend fun getById(
         @Header("Authorization") token: String,
-        @Path("id") id: Int
-    ): Response<OrderResponse>
+        @Path("id") id: String
+    ): Response<LaundryServiceResponse>
 
-    @POST("orders")
-    suspend fun createOrder(
+    @POST("laundry-services")
+    suspend fun create(
+        @Header("Authorization") token: String,
+        @Body request: CreateLaundryServiceRequest
+    ): Response<BaseResponse>
+
+    @PUT("laundry-services/{id}")
+    suspend fun update(
+        @Header("Authorization") token: String,
+        @Path("id") id: String,
+        @Body request: CreateLaundryServiceRequest
+    ): Response<BaseResponse>
+
+    @DELETE("laundry-services/{id}")
+    suspend fun delete(
+        @Header("Authorization") token: String,
+        @Path("id") id: String
+    ): Response<BaseResponse>
+}
+
+interface LaundryOrderApiService {
+    @GET("laundry-orders")
+    suspend fun getAll(
+        @Header("Authorization") token: String,
+        @Query("search") search: String? = null,
+        @Query("status") status: String? = null,
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 10
+    ): Response<LaundryOrderListResponse>
+
+    @GET("laundry-orders/{id}")
+    suspend fun getById(
+        @Header("Authorization") token: String,
+        @Path("id") id: String
+    ): Response<LaundryOrderResponse>
+
+    @POST("laundry-orders")
+    suspend fun create(
         @Header("Authorization") token: String,
         @Body request: CreateOrderRequest
-    ): Response<OrderResponse>
+    ): Response<BaseResponse>
 
-    @PUT("orders/{id}")
-    suspend fun updateOrderStatus(
+    @PUT("laundry-orders/{id}")
+    suspend fun update(
         @Header("Authorization") token: String,
-        @Path("id") id: Int,
+        @Path("id") id: String,
+        @Body request: UpdateOrderRequest
+    ): Response<BaseResponse>
+
+    @PUT("laundry-orders/{id}/status")
+    suspend fun updateStatus(
+        @Header("Authorization") token: String,
+        @Path("id") id: String,
         @Body request: UpdateOrderStatusRequest
-    ): Response<OrderResponse>
+    ): Response<BaseResponse>
 
-    @DELETE("orders/{id}")
-    suspend fun deleteOrder(
+    @DELETE("laundry-orders/{id}")
+    suspend fun delete(
         @Header("Authorization") token: String,
-        @Path("id") id: Int
+        @Path("id") id: String
     ): Response<BaseResponse>
 }

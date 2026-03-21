@@ -17,48 +17,33 @@ data class AuthUiState(
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val repo: AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
-    val authToken: StateFlow<String?> = authRepository.getAuthToken()
+    // SharingStarted.Eagerly agar langsung load dari DataStore saat ViewModel dibuat
+    val authToken: StateFlow<String?> = repo.authToken
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    val userName: StateFlow<String?> = authRepository.getName()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
-
-    val userRole: StateFlow<String?> = authRepository.getRole()
+    val userName: StateFlow<String?> = repo.userName
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     fun login(username: String, password: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            val result = authRepository.login(username, password)
-            result.fold(
+            _uiState.value = AuthUiState(isLoading = true)
+            repo.login(username, password).fold(
                 onSuccess = { response ->
-                    val token = response.resolveToken()
+                    val token = response.data?.authToken
                     if (token != null) {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            isLoggedIn = true,
-                            error = null
-                        )
+                        _uiState.value = AuthUiState(isLoggedIn = true)
                     } else {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            isLoggedIn = false,
-                            error = response.message ?: "Login gagal, periksa username/password"
-                        )
+                        _uiState.value = AuthUiState(error = response.message ?: "Login gagal")
                     }
                 },
                 onFailure = { e ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        isLoggedIn = false,
-                        error = e.message ?: "Login gagal"
-                    )
+                    _uiState.value = AuthUiState(error = e.message ?: "Login gagal")
                 }
             )
         }
@@ -66,21 +51,15 @@ class AuthViewModel @Inject constructor(
 
     fun register(name: String, username: String, password: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            val result = authRepository.register(name, username, password)
-            result.fold(
+            _uiState.value = AuthUiState(isLoading = true)
+            repo.register(name, username, password).fold(
                 onSuccess = { response ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        successMessage = response.message ?: "Registrasi berhasil",
-                        error = null
+                    _uiState.value = AuthUiState(
+                        successMessage = response.message ?: "Registrasi berhasil! Silakan login."
                     )
                 },
                 onFailure = { e ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = e.message ?: "Registrasi gagal"
-                    )
+                    _uiState.value = AuthUiState(error = e.message ?: "Registrasi gagal")
                 }
             )
         }
@@ -88,12 +67,12 @@ class AuthViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch {
-            authRepository.logout()
+            repo.logout()
             _uiState.value = AuthUiState()
         }
     }
 
     fun clearMessages() {
-        _uiState.value = _uiState.value.copy(error = null, successMessage = null)
+        _uiState.value = _uiState.value.copy(error = null, successMessage = null, isLoggedIn = false)
     }
 }
