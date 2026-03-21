@@ -18,17 +18,26 @@ data class RegisterRequest(
     val password: String
 )
 
-// Support kedua format: token/user langsung di root ATAU di dalam "data"
 @Serializable
 data class AuthResponse(
-    val success: Boolean,
-    val message: String,
-    val token: String? = null,
-    val user: User? = null,
-    val data: AuthData? = null
+    val success: Boolean? = null,         // opsional, tidak semua backend kirim ini
+    val message: String? = null,
+    val token: String? = null,            // flat format
+    val user: User? = null,               // flat format
+    val data: AuthData? = null,           // nested format
+    val error: String? = null,            // beberapa backend kirim field error
+    val status: String? = null            // atau field status
 ) {
-    fun getToken(): String? = token ?: data?.token
-    fun getUser(): User? = user ?: data?.user
+    fun resolveToken(): String? = token ?: data?.token
+    fun resolveUser(): User? = user ?: data?.user
+    fun resolveSuccess(): Boolean {
+        // Cek berbagai cara backend menyatakan sukses
+        if (success != null) return success
+        if (status != null) return status == "success" || status == "ok"
+        if (error != null) return false
+        // Jika ada token, berarti berhasil
+        return resolveToken() != null
+    }
 }
 
 @Serializable
@@ -49,8 +58,8 @@ data class User(
 
 @Serializable
 data class UserResponse(
-    val success: Boolean,
-    val message: String,
+    val success: Boolean? = null,
+    val message: String? = null,
     val data: User? = null
 )
 
@@ -69,8 +78,8 @@ data class LaundryItem(
 
 @Serializable
 data class LaundryItemListResponse(
-    val success: Boolean,
-    val message: String,
+    val success: Boolean? = null,
+    val message: String? = null,
     val data: LaundryItemData? = null
 )
 
@@ -85,8 +94,8 @@ data class LaundryItemData(
 
 @Serializable
 data class LaundryItemResponse(
-    val success: Boolean,
-    val message: String,
+    val success: Boolean? = null,
+    val message: String? = null,
     val data: LaundryItem? = null
 )
 
@@ -118,8 +127,8 @@ data class Order(
 
 @Serializable
 data class OrderListResponse(
-    val success: Boolean,
-    val message: String,
+    val success: Boolean? = null,
+    val message: String? = null,
     val data: OrderData? = null
 )
 
@@ -134,8 +143,8 @@ data class OrderData(
 
 @Serializable
 data class OrderResponse(
-    val success: Boolean,
-    val message: String,
+    val success: Boolean? = null,
+    val message: String? = null,
     val data: Order? = null
 )
 
@@ -154,6 +163,6 @@ data class UpdateOrderStatusRequest(
 
 @Serializable
 data class BaseResponse(
-    val success: Boolean,
-    val message: String
+    val success: Boolean? = null,
+    val message: String? = null
 )

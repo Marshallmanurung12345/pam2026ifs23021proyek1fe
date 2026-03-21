@@ -119,7 +119,7 @@ class OrderViewModel @Inject constructor(
                         isLoading = false,
                         successMessage = response.message
                     )
-                    if (response.success) onSuccess()
+                    if (response.success != false) onSuccess()
                 },
                 onFailure = { e ->
                     _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
@@ -138,7 +138,7 @@ class OrderViewModel @Inject constructor(
                         isLoading = false,
                         successMessage = response.message
                     )
-                    if (response.success) onSuccess()
+                    if (response.success != false) onSuccess()
                 },
                 onFailure = { e ->
                     _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
@@ -157,7 +157,7 @@ class OrderViewModel @Inject constructor(
                         isLoading = false,
                         successMessage = response.message
                     )
-                    if (response.success) onSuccess()
+                    if (response.success != false) onSuccess()
                 },
                 onFailure = { e ->
                     _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)

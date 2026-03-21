@@ -111,7 +111,8 @@ class LaundryItemViewModel @Inject constructor(
                         isLoading = false,
                         successMessage = response.message
                     )
-                    if (response.success) onSuccess()
+                    // success == null dianggap berhasil jika tidak ada error
+                    if (response.success != false) onSuccess()
                 },
                 onFailure = { e ->
                     _uiState.value = _uiState.value.copy(
@@ -141,7 +142,7 @@ class LaundryItemViewModel @Inject constructor(
                         isLoading = false,
                         successMessage = response.message
                     )
-                    if (response.success) onSuccess()
+                    if (response.success != false) onSuccess()
                 },
                 onFailure = { e ->
                     _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
@@ -160,7 +161,7 @@ class LaundryItemViewModel @Inject constructor(
                         isLoading = false,
                         successMessage = response.message
                     )
-                    if (response.success) onSuccess()
+                    if (response.success != false) onSuccess()
                 },
                 onFailure = { e ->
                     _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)

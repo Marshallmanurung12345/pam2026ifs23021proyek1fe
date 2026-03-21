@@ -38,10 +38,11 @@ class AuthViewModel @Inject constructor(
             val result = authRepository.login(username, password)
             result.fold(
                 onSuccess = { response ->
+                    val loggedIn = response.resolveToken() != null
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        isLoggedIn = response.success,
-                        error = if (!response.success) response.message else null
+                        isLoggedIn = loggedIn,
+                        error = if (!loggedIn) (response.message ?: "Login gagal") else null
                     )
                 },
                 onFailure = { e ->
@@ -62,8 +63,8 @@ class AuthViewModel @Inject constructor(
                 onSuccess = { response ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        successMessage = if (response.success) response.message else null,
-                        error = if (!response.success) response.message else null
+                        successMessage = response.message ?: "Registrasi berhasil",
+                        error = null
                     )
                 },
                 onFailure = { e ->

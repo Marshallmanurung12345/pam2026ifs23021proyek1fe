@@ -16,24 +16,23 @@ class AuthRepository @Inject constructor(
             val response = authApiService.login(LoginRequest(username, password))
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.success) {
-                    val token = body.getToken()
-                    val user = body.getUser()
-                    if (token != null) {
-                        userPreferences.saveAuthToken(token)
-                    }
-                    if (user != null) {
-                        userPreferences.saveUserInfo(
-                            user.id,
-                            user.name,
-                            user.username,
-                            user.role
-                        )
-                    }
+                if (body != null) {
+                    val token = body.resolveToken()
+                    val user = body.resolveUser()
+                    if (token != null) userPreferences.saveAuthToken(token)
+                    if (user != null) userPreferences.saveUserInfo(user.id, user.name, user.username, user.role)
                 }
-                Result.success(body ?: AuthResponse(false, "Empty response"))
+                Result.success(body ?: AuthResponse(message = "Empty response"))
             } else {
-                Result.failure(Exception("Login failed: ${response.code()}"))
+                val errorMsg = when (response.code()) {
+                    401 -> "Username atau password salah"
+                    404 -> "Endpoint tidak ditemukan"
+                    409 -> "Username sudah digunakan"
+                    422 -> "Data tidak valid"
+                    500 -> "Server error, coba lagi nanti"
+                    else -> "Login gagal (${response.code()})"
+                }
+                Result.failure(Exception(errorMsg))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -45,18 +44,23 @@ class AuthRepository @Inject constructor(
             val response = authApiService.register(RegisterRequest(name, username, password))
             if (response.isSuccessful) {
                 val body = response.body()
-                Result.success(body ?: AuthResponse(false, "Empty response"))
+                Result.success(body ?: AuthResponse(message = "Empty response"))
             } else {
-                Result.failure(Exception("Register failed: ${response.code()}"))
+                val errorMsg = when (response.code()) {
+                    409 -> "Username sudah digunakan, coba username lain"
+                    404 -> "Endpoint tidak ditemukan"
+                    422 -> "Data tidak valid"
+                    500 -> "Server error, coba lagi nanti"
+                    else -> "Registrasi gagal (${response.code()})"
+                }
+                Result.failure(Exception(errorMsg))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun logout() {
-        userPreferences.clearAll()
-    }
+    suspend fun logout() { userPreferences.clearAll() }
 
     fun getAuthToken() = userPreferences.authToken
     fun getName() = userPreferences.name
