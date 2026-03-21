@@ -16,14 +16,20 @@ class AuthRepository @Inject constructor(
             val response = authApiService.login(LoginRequest(username, password))
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.success && body.data != null) {
-                    userPreferences.saveAuthToken(body.data.token)
-                    userPreferences.saveUserInfo(
-                        body.data.user.id,
-                        body.data.user.name,
-                        body.data.user.username,
-                        body.data.user.role
-                    )
+                if (body != null && body.success) {
+                    val token = body.getToken()
+                    val user = body.getUser()
+                    if (token != null) {
+                        userPreferences.saveAuthToken(token)
+                    }
+                    if (user != null) {
+                        userPreferences.saveUserInfo(
+                            user.id,
+                            user.name,
+                            user.username,
+                            user.role
+                        )
+                    }
                 }
                 Result.success(body ?: AuthResponse(false, "Empty response"))
             } else {

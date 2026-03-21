@@ -18,17 +18,23 @@ data class RegisterRequest(
     val password: String
 )
 
+// Support kedua format: token/user langsung di root ATAU di dalam "data"
 @Serializable
 data class AuthResponse(
     val success: Boolean,
     val message: String,
+    val token: String? = null,
+    val user: User? = null,
     val data: AuthData? = null
-)
+) {
+    fun getToken(): String? = token ?: data?.token
+    fun getUser(): User? = user ?: data?.user
+}
 
 @Serializable
 data class AuthData(
-    val token: String,
-    val user: User
+    val token: String? = null,
+    val user: User? = null
 )
 
 // ─── User ────────────────────────────────────────────────────────────────────
@@ -48,7 +54,7 @@ data class UserResponse(
     val data: User? = null
 )
 
-// ─── Laundry Item (Jenis Layanan) ─────────────────────────────────────────────
+// ─── Laundry Item ─────────────────────────────────────────────────────────────
 
 @Serializable
 data class LaundryItem(

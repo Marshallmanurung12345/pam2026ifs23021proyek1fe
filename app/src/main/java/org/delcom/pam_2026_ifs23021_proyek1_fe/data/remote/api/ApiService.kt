@@ -5,18 +5,25 @@ import retrofit2.Response
 import retrofit2.http.*
 
 interface AuthApiService {
-    @POST("api/auth/login")
-    suspend fun login(@Body request: LoginRequest): Response<AuthResponse>
 
-    @POST("api/auth/register")
+    // Coba salah satu endpoint ini sesuai backend kamu:
+    // Option 1: /api/auth/login  (paling umum)
+    // Option 2: /auth/login
+    // Option 3: /api/users/login
+    // Option 4: /login
+
+    @POST("auth/register")
     suspend fun register(@Body request: RegisterRequest): Response<AuthResponse>
+
+    @POST("auth/login")
+    suspend fun login(@Body request: LoginRequest): Response<AuthResponse>
 }
 
 interface UserApiService {
-    @GET("api/users/me")
+    @GET("users/me")
     suspend fun getProfile(@Header("Authorization") token: String): Response<UserResponse>
 
-    @PUT("api/users/me")
+    @PUT("users/me")
     suspend fun updateProfile(
         @Header("Authorization") token: String,
         @Body user: User
@@ -24,7 +31,7 @@ interface UserApiService {
 }
 
 interface LaundryItemApiService {
-    @GET("api/laundry-items")
+    @GET("laundry-items")
     suspend fun getLaundryItems(
         @Header("Authorization") token: String,
         @Query("page") page: Int = 1,
@@ -32,26 +39,26 @@ interface LaundryItemApiService {
         @Query("search") search: String? = null
     ): Response<LaundryItemListResponse>
 
-    @GET("api/laundry-items/{id}")
+    @GET("laundry-items/{id}")
     suspend fun getLaundryItem(
         @Header("Authorization") token: String,
         @Path("id") id: Int
     ): Response<LaundryItemResponse>
 
-    @POST("api/laundry-items")
+    @POST("laundry-items")
     suspend fun createLaundryItem(
         @Header("Authorization") token: String,
         @Body request: CreateLaundryItemRequest
     ): Response<LaundryItemResponse>
 
-    @PUT("api/laundry-items/{id}")
+    @PUT("laundry-items/{id}")
     suspend fun updateLaundryItem(
         @Header("Authorization") token: String,
         @Path("id") id: Int,
         @Body request: CreateLaundryItemRequest
     ): Response<LaundryItemResponse>
 
-    @DELETE("api/laundry-items/{id}")
+    @DELETE("laundry-items/{id}")
     suspend fun deleteLaundryItem(
         @Header("Authorization") token: String,
         @Path("id") id: Int
@@ -59,7 +66,7 @@ interface LaundryItemApiService {
 }
 
 interface OrderApiService {
-    @GET("api/orders")
+    @GET("orders")
     suspend fun getOrders(
         @Header("Authorization") token: String,
         @Query("page") page: Int = 1,
@@ -68,26 +75,26 @@ interface OrderApiService {
         @Query("status") status: String? = null
     ): Response<OrderListResponse>
 
-    @GET("api/orders/{id}")
+    @GET("orders/{id}")
     suspend fun getOrder(
         @Header("Authorization") token: String,
         @Path("id") id: Int
     ): Response<OrderResponse>
 
-    @POST("api/orders")
+    @POST("orders")
     suspend fun createOrder(
         @Header("Authorization") token: String,
         @Body request: CreateOrderRequest
     ): Response<OrderResponse>
 
-    @PUT("api/orders/{id}")
+    @PUT("orders/{id}")
     suspend fun updateOrderStatus(
         @Header("Authorization") token: String,
         @Path("id") id: Int,
         @Body request: UpdateOrderStatusRequest
     ): Response<OrderResponse>
 
-    @DELETE("api/orders/{id}")
+    @DELETE("orders/{id}")
     suspend fun deleteOrder(
         @Header("Authorization") token: String,
         @Path("id") id: Int
