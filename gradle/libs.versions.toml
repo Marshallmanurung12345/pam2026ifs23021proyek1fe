@@ -74,11 +74,12 @@ hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "dag
 # DataStore
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 
-# Lifecycle ViewModel
+# Lifecycle ViewModel Compose
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
