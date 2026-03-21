@@ -1,22 +1,19 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
-
-    // Add Plugins
     alias(libs.plugins.dagger.hilt.android)
     alias(libs.plugins.devtools.ksp)
 }
 
 android {
     namespace = "org.delcom.pam_2026_ifs23021_proyek1_fe"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "org.delcom.pam_2026_ifs23021_proyek1_fe"
         minSdk = 29
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
