@@ -40,7 +40,7 @@ fun ErrorMessage(message: String, onRetry: (() -> Unit)? = null) {
 
 @Composable
 fun EmptyState(message: String, icon: @Composable () -> Unit = {
-    Icon(Icons.Filled.InboxOutlined, null, Modifier.size(64.dp), tint = MaterialTheme.colorScheme.outline)
+    Icon(Icons.Default.Inbox, null, Modifier.size(64.dp), tint = MaterialTheme.colorScheme.outline)
 }) {
     Column(
         Modifier.fillMaxWidth().padding(32.dp),
@@ -187,7 +187,7 @@ fun SearchBar(
 ) {
     OutlinedTextField(
         value = query,
-        onValueChange = onQueryChange,
+        onQueryChange = onQueryChange,
         modifier = modifier.fillMaxWidth(),
         placeholder = { Text(placeholder) },
         leadingIcon = { Icon(Icons.Filled.Search, null) },

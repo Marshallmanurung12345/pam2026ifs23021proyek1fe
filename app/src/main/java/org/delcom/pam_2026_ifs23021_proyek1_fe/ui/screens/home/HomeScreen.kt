@@ -144,7 +144,7 @@ fun HomeScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Filled.InboxOutlined, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.outline)
+                    Icon(Icons.Filled.Inbox, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.outline)
                     Text("Belum ada pesanan", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
