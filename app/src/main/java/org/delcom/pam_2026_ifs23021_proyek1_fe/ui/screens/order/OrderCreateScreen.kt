@@ -16,184 +16,113 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import org.delcom.pam_2026_ifs23021_proyek1_fe.data.model.LaundryItem
-import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.components.LoadingBox
-import org.delcom.pam_2026_ifs23021_proyek1_fe.viewmodel.LaundryItemViewModel
-import org.delcom.pam_2026_ifs23021_proyek1_fe.viewmodel.OrderViewModel
+import org.delcom.pam_2026_ifs23021_proyek1_fe.data.model.CreateOrderRequest
+import org.delcom.pam_2026_ifs23021_proyek1_fe.data.model.LaundryService
+import org.delcom.pam_2026_ifs23021_proyek1_fe.viewmodel.LaundryOrderViewModel
+import org.delcom.pam_2026_ifs23021_proyek1_fe.viewmodel.LaundryServiceViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderCreateScreen(
-    token: String,
-    onBack: () -> Unit,
-    onCreated: () -> Unit,
-    orderViewModel: OrderViewModel = hiltViewModel(),
-    itemViewModel: LaundryItemViewModel = hiltViewModel()
+    token: String, onBack: () -> Unit, onCreated: () -> Unit,
+    orderViewModel: LaundryOrderViewModel = hiltViewModel(),
+    serviceViewModel: LaundryServiceViewModel = hiltViewModel()
 ) {
     val orderState by orderViewModel.uiState.collectAsState()
-    val itemState by itemViewModel.uiState.collectAsState()
+    val serviceState by serviceViewModel.uiState.collectAsState()
 
     var customerName by remember { mutableStateOf("") }
-    var weight by remember { mutableStateOf("") }
+    var customerPhone by remember { mutableStateOf("") }
+    var quantity by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
-    var selectedItem by remember { mutableStateOf<LaundryItem?>(null) }
+    var selectedService by remember { mutableStateOf<LaundryService?>(null) }
     var dropdownExpanded by remember { mutableStateOf(false) }
 
-    LaunchedEffect(token) {
-        if (token.isNotEmpty()) itemViewModel.loadItems(token, refresh = true)
+    LaunchedEffect(token) { if (token.isNotEmpty()) serviceViewModel.loadServices(token) }
+    LaunchedEffect(orderState.successMessage) {
+        if (orderState.successMessage != null) { orderViewModel.clearMessages(); onCreated() }
     }
 
-    LaunchedEffect(orderState.successMessage) {
-        if (orderState.successMessage != null) {
-            orderViewModel.clearMessages()
-            onCreated()
-        }
-    }
+    val totalPrice = (selectedService?.price ?: 0.0) * (quantity.toDoubleOrNull() ?: 0.0)
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Buat Pesanan Baru") },
+            TopAppBar(title = { Text("Buat Pesanan") },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Filled.ArrowBack, null) } },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer))
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), elevation = CardDefaults.cardElevation(2.dp)) {
+        Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
+            .padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), elevation = CardDefaults.cardElevation(2.dp)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    Text("Detail Pesanan", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    OutlinedTextField(customerName, { customerName = it }, label = { Text("Nama Pelanggan") },
+                        modifier = Modifier.fillMaxWidth(), singleLine = true)
+                    OutlinedTextField(customerPhone, { customerPhone = it }, label = { Text("No. Telepon") },
+                        modifier = Modifier.fillMaxWidth(), singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone))
 
-                    OutlinedTextField(
-                        value = customerName,
-                        onValueChange = { customerName = it },
-                        label = { Text("Nama Pelanggan") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-
-                    // Laundry Item dropdown
-                    ExposedDropdownMenuBox(
-                        expanded = dropdownExpanded,
-                        onExpandedChange = { dropdownExpanded = it }
-                    ) {
-                        OutlinedTextField(
-                            value = selectedItem?.name ?: "",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Pilih Layanan") },
-                            trailingIcon = {
-                                Icon(Icons.Filled.ArrowDropDown, null)
-                            },
-                            modifier = Modifier.fillMaxWidth().menuAnchor()
-                        )
-                        ExposedDropdownMenu(
-                            expanded = dropdownExpanded,
-                            onDismissRequest = { dropdownExpanded = false }
-                        ) {
-                            if (itemState.isLoading) {
-                                DropdownMenuItem(text = { Text("Memuat...") }, onClick = {})
-                            } else {
-                                itemState.items.forEach { item ->
-                                    DropdownMenuItem(
-                                        text = {
-                                            Column {
-                                                Text(item.name, fontWeight = FontWeight.Medium)
-                                                Text(
-                                                    "Rp ${"%,.0f".format(item.pricePerKg)}/kg · ${item.estimatedDays} hari",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                        },
-                                        onClick = {
-                                            selectedItem = item
-                                            dropdownExpanded = false
-                                        }
-                                    )
-                                }
+                    ExposedDropdownMenuBox(expanded = dropdownExpanded, onExpandedChange = { dropdownExpanded = it }) {
+                        OutlinedTextField(value = selectedService?.name ?: "", onValueChange = {}, readOnly = true,
+                            label = { Text("Pilih Layanan") }, trailingIcon = { Icon(Icons.Filled.ArrowDropDown, null) },
+                            modifier = Modifier.fillMaxWidth().menuAnchor())
+                        ExposedDropdownMenu(expanded = dropdownExpanded, onDismissRequest = { dropdownExpanded = false }) {
+                            serviceState.services.forEach { svc ->
+                                DropdownMenuItem(text = {
+                                    Column {
+                                        Text(svc.name, fontWeight = FontWeight.Medium)
+                                        Text("Rp ${"%,.0f".format(svc.price)}/${svc.unit} · ${svc.estimatedDays} hari",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                }, onClick = { selectedService = svc; dropdownExpanded = false })
                             }
                         }
                     }
 
-                    OutlinedTextField(
-                        value = weight,
-                        onValueChange = { weight = it },
-                        label = { Text("Berat (kg)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
+                    OutlinedTextField(quantity, { quantity = it }, label = { Text("Jumlah") },
+                        modifier = Modifier.fillMaxWidth(), singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        suffix = { Text("kg") }
-                    )
+                        suffix = { Text(selectedService?.unit ?: "") })
 
-                    OutlinedTextField(
-                        value = notes,
-                        onValueChange = { notes = it },
-                        label = { Text("Catatan (opsional)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = 2,
-                        maxLines = 4
-                    )
+                    OutlinedTextField(notes, { notes = it }, label = { Text("Catatan (opsional)") },
+                        modifier = Modifier.fillMaxWidth(), minLines = 2, maxLines = 4)
 
-                    // Price preview
-                    selectedItem?.let { item ->
-                        val w = weight.toDoubleOrNull() ?: 0.0
-                        val total = item.pricePerKg * w
-                        if (w > 0) {
-                            Surface(
-                                color = MaterialTheme.colorScheme.primaryContainer,
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Row(
-                                    Modifier.padding(12.dp).fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text("Estimasi Total:", style = MaterialTheme.typography.bodyMedium)
-                                    Text(
-                                        "Rp ${"%,.0f".format(total)}",
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                }
+                    if (totalPrice > 0) {
+                        Surface(color = MaterialTheme.colorScheme.primaryContainer,
+                            shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
+                            Row(Modifier.padding(12.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("Total:")
+                                Text("Rp ${"%,.0f".format(totalPrice)}", fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary)
                             }
                         }
                     }
 
-                    orderState.error?.let {
-                        Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-                    }
+                    orderState.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
 
                     Button(
                         onClick = {
-                            val w = weight.toDoubleOrNull() ?: 0.0
-                            val item = selectedItem ?: return@Button
-                            orderViewModel.createOrder(
-                                token, item.id, customerName, w, notes
-                            ) {}
+                            val svc = selectedService ?: return@Button
+                            val qty = quantity.toDoubleOrNull() ?: return@Button
+                            orderViewModel.create(token, CreateOrderRequest(
+                                serviceId = svc.id, customerName = customerName,
+                                customerPhone = customerPhone, quantity = qty,
+                                totalPrice = svc.price * qty, notes = notes.ifBlank { null }
+                            )) {}
                         },
                         modifier = Modifier.fillMaxWidth().height(50.dp),
-                        enabled = !orderState.isLoading && customerName.isNotBlank()
-                                && selectedItem != null && (weight.toDoubleOrNull() ?: 0.0) > 0,
+                        enabled = !orderState.isLoading && customerName.isNotBlank() &&
+                                customerPhone.isNotBlank() && selectedService != null &&
+                                (quantity.toDoubleOrNull() ?: 0.0) > 0,
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        if (orderState.isLoading) {
-                            CircularProgressIndicator(Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
-                        } else {
-                            Text("Buat Pesanan", fontWeight = FontWeight.SemiBold)
-                        }
+                        if (orderState.isLoading) CircularProgressIndicator(Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
+                        else Text("Buat Pesanan", fontWeight = FontWeight.SemiBold)
                     }
                 }
             }

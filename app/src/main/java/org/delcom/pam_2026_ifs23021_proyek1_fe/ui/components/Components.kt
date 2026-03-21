@@ -12,7 +12,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import org.delcom.pam_2026_ifs23021_proyek1_fe.data.model.Order
 
 // ─── Loading & Error ─────────────────────────────────────────────────────────
 
@@ -39,15 +38,13 @@ fun ErrorMessage(message: String, onRetry: (() -> Unit)? = null) {
 }
 
 @Composable
-fun EmptyState(message: String, icon: @Composable () -> Unit = {
-    Icon(Icons.Filled.Inbox, null, Modifier.size(64.dp), tint = MaterialTheme.colorScheme.outline)
-}) {
+fun EmptyState(message: String) {
     Column(
         Modifier.fillMaxWidth().padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        icon()
+        Icon(Icons.Filled.Inbox, null, Modifier.size(64.dp), tint = MaterialTheme.colorScheme.outline)
         Text(message, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
@@ -86,7 +83,7 @@ fun StatusChip(status: String) {
         "processing" -> MaterialTheme.colorScheme.tertiaryContainer to "Diproses"
         "done" -> MaterialTheme.colorScheme.primaryContainer to "Selesai"
         "delivered" -> MaterialTheme.colorScheme.secondaryContainer to "Terkirim"
-        "cancelled" -> MaterialTheme.colorScheme.surfaceVariant to "Dibatalkan"
+        "cancelled" -> MaterialTheme.colorScheme.surfaceVariant to "Batal"
         else -> MaterialTheme.colorScheme.surfaceVariant to status
     }
     val textColor = when (status.lowercase()) {
@@ -96,10 +93,7 @@ fun StatusChip(status: String) {
         "delivered" -> MaterialTheme.colorScheme.onSecondaryContainer
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
-    Surface(
-        shape = RoundedCornerShape(50),
-        color = color
-    ) {
+    Surface(shape = RoundedCornerShape(50), color = color) {
         Text(
             label,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
@@ -110,43 +104,42 @@ fun StatusChip(status: String) {
     }
 }
 
-// ─── Order Card ──────────────────────────────────────────────────────────────
+// ─── Search Bar ──────────────────────────────────────────────────────────────
 
 @Composable
-fun OrderCard(order: Order, onClick: () -> Unit) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(2.dp)
+fun SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    placeholder: String = "Cari...",
+    modifier: Modifier = Modifier
+) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = modifier.fillMaxWidth(),
+        placeholder = { Text(placeholder) },
+        leadingIcon = { Icon(Icons.Filled.Search, null) },
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }) { Icon(Icons.Filled.Clear, null) }
+            }
+        },
+        singleLine = true,
+        shape = RoundedCornerShape(12.dp)
+    )
+}
+
+// ─── Info Row ─────────────────────────────────────────────────────────────────
+
+@Composable
+fun InfoRow(label: String, value: String) {
+    Row(
+        Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(
-                    "#${order.id} - ${order.customerName}",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
-                )
-                StatusChip(order.status)
-            }
-            Text(
-                order.laundryItemName,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(
-                    "${order.weight} kg",
-                    style = MaterialTheme.typography.bodySmall
-                )
-                Text(
-                    "Rp ${"%,.0f".format(order.totalPrice)}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
+        Text(label, style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -174,44 +167,4 @@ fun ConfirmDialog(
             OutlinedButton(onClick = onDismiss) { Text("Batal") }
         }
     )
-}
-
-// ─── Search Bar ──────────────────────────────────────────────────────────────
-
-@Composable
-fun SearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    placeholder: String = "Cari...",
-    modifier: Modifier = Modifier
-) {
-    OutlinedTextField(
-        value = query,
-        onValueChange = onQueryChange,
-        modifier = modifier.fillMaxWidth(),
-        placeholder = { Text(placeholder) },
-        leadingIcon = { Icon(Icons.Filled.Search, null) },
-        trailingIcon = {
-            if (query.isNotEmpty()) {
-                IconButton(onClick = { onQueryChange("") }) {
-                    Icon(Icons.Filled.Clear, null)
-                }
-            }
-        },
-        singleLine = true,
-        shape = RoundedCornerShape(12.dp)
-    )
-}
-
-// ─── Info Row ─────────────────────────────────────────────────────────────────
-
-@Composable
-fun InfoRow(label: String, value: String) {
-    Row(
-        Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-    }
 }

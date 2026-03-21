@@ -25,15 +25,16 @@ fun RegisterScreen(
     onNavigateToLogin: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-
     var name by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var passwordMismatch by remember { mutableStateOf(false) }
 
+    // Navigasi ke login setelah register berhasil
     LaunchedEffect(uiState.successMessage) {
         if (uiState.successMessage != null) {
+            viewModel.clearMessages()
             onRegisterSuccess()
         }
     }
@@ -43,9 +44,7 @@ fun RegisterScreen(
             TopAppBar(
                 title = { Text("Daftar Akun") },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateToLogin) {
-                        Icon(Icons.Filled.ArrowBack, null)
-                    }
+                    IconButton(onClick = onNavigateToLogin) { Icon(Icons.Filled.ArrowBack, null) }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -55,101 +54,62 @@ fun RegisterScreen(
         }
     ) { padding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .verticalScroll(rememberScrollState())
-                .padding(padding)
-                .padding(24.dp),
+            Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
+                .verticalScroll(rememberScrollState()).padding(padding).padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                "Buat Akun Baru",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                "Isi data di bawah untuk mendaftar",
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Text("Buat Akun Baru", style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            Text("Isi data di bawah untuk mendaftar", color = MaterialTheme.colorScheme.onSurfaceVariant)
 
             Spacer(Modifier.height(8.dp))
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(4.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        label = { Text("Nama Lengkap") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = username,
-                        onValueChange = { username = it },
-                        label = { Text("Username") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    PasswordField(
-                        value = password,
-                        onValueChange = {
-                            password = it
-                            passwordMismatch = confirmPassword.isNotEmpty() && it != confirmPassword
-                        }
-                    )
-                    PasswordField(
-                        value = confirmPassword,
-                        onValueChange = {
-                            confirmPassword = it
-                            passwordMismatch = it != password
-                        },
-                        label = "Konfirmasi Password"
-                    )
-                    if (passwordMismatch) {
-                        Text("Password tidak cocok", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-                    }
+            Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(4.dp)) {
+                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    OutlinedTextField(name, { name = it }, label = { Text("Nama Lengkap") },
+                        singleLine = true, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(username, { username = it }, label = { Text("Username") },
+                        singleLine = true, modifier = Modifier.fillMaxWidth())
+                    PasswordField(password, {
+                        password = it
+                        passwordMismatch = confirmPassword.isNotEmpty() && it != confirmPassword
+                    })
+                    PasswordField(confirmPassword, {
+                        confirmPassword = it
+                        passwordMismatch = it != password
+                    }, label = "Konfirmasi Password")
 
+                    if (passwordMismatch) {
+                        Text("Password tidak cocok", color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall)
+                    }
                     uiState.error?.let {
-                        Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                        Text(it, color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall)
                     }
 
                     Button(
                         onClick = {
-                            if (password != confirmPassword) {
-                                passwordMismatch = true
-                                return@Button
-                            }
-                            viewModel.clearMessages()
+                            if (password != confirmPassword) { passwordMismatch = true; return@Button }
                             viewModel.register(name, username, password)
                         },
                         modifier = Modifier.fillMaxWidth().height(50.dp),
-                        enabled = !uiState.isLoading && name.isNotBlank() && username.isNotBlank() && password.isNotBlank() && !passwordMismatch,
+                        enabled = !uiState.isLoading && name.isNotBlank() && username.isNotBlank()
+                                && password.isNotBlank() && !passwordMismatch,
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        if (uiState.isLoading) {
-                            CircularProgressIndicator(Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
-                        } else {
-                            Text("Daftar", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                        }
+                        if (uiState.isLoading) CircularProgressIndicator(Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
+                        else Text("Daftar", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Sudah punya akun?", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                TextButton(onClick = onNavigateToLogin) {
-                    Text("Masuk", fontWeight = FontWeight.Bold)
-                }
+                TextButton(onClick = onNavigateToLogin) { Text("Masuk", fontWeight = FontWeight.Bold) }
             }
         }
     }
