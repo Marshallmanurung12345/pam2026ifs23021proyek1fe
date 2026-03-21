@@ -1,12 +1,8 @@
 package org.delcom.pam_2026_ifs23021_proyek1_fe.data.model
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
-// POST /auth/login  → body: {username, password}
-// POST /auth/register → body: {name, username, password}
-// Response: { status: "success", message: "...", data: { authToken: "...", refreshToken: "..." } }
 
 @Serializable
 data class LoginRequest(
@@ -36,7 +32,7 @@ data class AuthTokenData(
 )
 
 // ─── User ─────────────────────────────────────────────────────────────────────
-// GET /users/me → { status, message, data: { user: {...} } }
+
 @Serializable
 data class User(
     val id: String = "",
@@ -60,9 +56,8 @@ data class UserMeData(
     val user: User? = null
 )
 
-// ─── Laundry Service (Jenis Layanan) ─────────────────────────────────────────
-// GET /laundry-services → { status, message, data: { laundryServices: [...] } }
-// GET /laundry-services/{id} → { status, message, data: { laundryService: {...} } }
+// ─── Laundry Service ──────────────────────────────────────────────────────────
+
 @Serializable
 data class LaundryService(
     val id: String = "",
@@ -114,7 +109,7 @@ data class CreateLaundryServiceRequest(
 )
 
 // ─── Laundry Order ────────────────────────────────────────────────────────────
-// GET /laundry-orders → { status, message, data: { laundryOrders: [...], pagination: {...} } }
+
 @Serializable
 data class LaundryOrder(
     val id: String = "",
