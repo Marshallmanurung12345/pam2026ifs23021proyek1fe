@@ -11,20 +11,13 @@ import androidx.navigation.*
 import androidx.navigation.compose.*
 import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.auth.LoginScreen
 import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.auth.RegisterScreen
-import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.laundryitem.LaundryServiceDetailScreen
 import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.laundryitem.LaundryServiceFormScreen
 import org.delcom.pam_2026_ifs23021_proyek1_fe.viewmodel.AuthViewModel
 
-// ─── Route Definitions ───────────────────────────────────────────────────────
-// PENTING: "create" harus SEBELUM "{serviceId}" agar tidak konflik
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
     object Home : Screen("home")
-    // Screen 3: Detail Data
-    object ServiceDetail : Screen("services/{serviceId}") {
-        fun createRoute(id: String) = "services/$id"
-    }
     object ServiceCreate : Screen("services/create")
     object ServiceEdit : Screen("services/{serviceId}/edit") {
         fun createRoute(id: String) = "services/$id/edit"
@@ -54,13 +47,8 @@ fun AppNavGraph(
 
     val startDest = if (!token.isNullOrEmpty()) Screen.Home.route else Screen.Login.route
 
-    NavHost(
-        navController = navController,
-        startDestination = startDest,
-        modifier = modifier
-    ) {
+    NavHost(navController = navController, startDestination = startDest, modifier = modifier) {
 
-        // ─── Auth ─────────────────────────────────────────────────────────────
         composable(Screen.Login.route) {
             LoginScreen(
                 viewModel = authViewModel,
@@ -82,7 +70,7 @@ fun AppNavGraph(
             )
         }
 
-        // ─── Main (Bottom Nav host) ────────────────────────────────────────────
+        // MainScreen = host 4 tab bottom nav
         composable(Screen.Home.route) {
             MainScreen(
                 authViewModel = authViewModel,
@@ -90,9 +78,6 @@ fun AppNavGraph(
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
-                },
-                onNavigateToServiceDetail = { id ->
-                    navController.navigate(Screen.ServiceDetail.createRoute(id))
                 },
                 onNavigateToServiceCreate = {
                     navController.navigate(Screen.ServiceCreate.route)
@@ -103,7 +88,7 @@ fun AppNavGraph(
             )
         }
 
-        // ─── Service Create (HARUS sebelum {serviceId}) ────────────────────────
+        // Form Tambah Layanan (Create)
         composable(Screen.ServiceCreate.route) {
             LaundryServiceFormScreen(
                 token = token ?: "",
@@ -113,22 +98,7 @@ fun AppNavGraph(
             )
         }
 
-        // ─── Screen 3: Detail Data ─────────────────────────────────────────────
-        composable(
-            route = Screen.ServiceDetail.route,
-            arguments = listOf(navArgument("serviceId") { type = NavType.StringType })
-        ) { back ->
-            val serviceId = back.arguments?.getString("serviceId") ?: return@composable
-            LaundryServiceDetailScreen(
-                serviceId = serviceId,
-                token = token ?: "",
-                onBack = { navController.popBackStack() },
-                onEdit = { id -> navController.navigate(Screen.ServiceEdit.createRoute(id)) },
-                onDeleted = { navController.popBackStack() }
-            )
-        }
-
-        // ─── Service Edit ─────────────────────────────────────────────────────
+        // Form Edit Layanan (Update)
         composable(
             route = Screen.ServiceEdit.route,
             arguments = listOf(navArgument("serviceId") { type = NavType.StringType })
