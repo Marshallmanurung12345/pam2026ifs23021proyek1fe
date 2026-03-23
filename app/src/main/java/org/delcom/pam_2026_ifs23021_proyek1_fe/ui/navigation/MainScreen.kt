@@ -59,7 +59,7 @@ fun MainScreen(
             NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                 listOf(
                     Triple("main_home", Icons.Filled.Home, "Beranda"),
-                    Triple("main_services", Icons.Filled.LocalLaundryService, "Layanan"),
+                    Triple("main_services", Icons.Filled.LocalLaundryService, "Daftar Data"),
                     Triple("main_profile", Icons.Filled.Person, "Profil")
                 ).forEach { (route, icon, label) ->
                     NavigationBarItem(
@@ -94,6 +94,7 @@ fun MainScreen(
                 )
             }
             composable("main_services") {
+                // Screen 2: Daftar Data — List semua layanan
                 LaundryServiceListScreen(
                     token = token ?: "",
                     onNavigateToDetail = onNavigateToServiceDetail,
@@ -101,6 +102,7 @@ fun MainScreen(
                 )
             }
             composable("main_profile") {
+                // Screen 4: Profil
                 ProfileScreen(authViewModel = authViewModel, onLogout = onLogout)
             }
         }
