@@ -11,17 +11,14 @@ import androidx.navigation.*
 import androidx.navigation.compose.*
 import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.auth.LoginScreen
 import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.auth.RegisterScreen
-import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.laundryitem.LaundryServiceFormScreen
+import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.order.OrderCreateScreen
 import org.delcom.pam_2026_ifs23021_proyek1_fe.viewmodel.AuthViewModel
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
     object Home : Screen("home")
-    object ServiceCreate : Screen("services/create")
-    object ServiceEdit : Screen("services/{serviceId}/edit") {
-        fun createRoute(id: String) = "services/$id/edit"
-    }
+    object OrderCreate : Screen("order/create")
 }
 
 @Composable
@@ -44,6 +41,13 @@ fun AppNavGraph(
         }
         return
     }
+
+    // State untuk pre-selected service saat order dari Beranda
+    var preselectedServiceId by remember { mutableStateOf<String?>(null) }
+    var preselectedServiceName by remember { mutableStateOf<String?>(null) }
+    var preselectedServicePrice by remember { mutableStateOf(0.0) }
+    var preselectedServiceUnit by remember { mutableStateOf("") }
+    var preselectedServiceDays by remember { mutableStateOf(1) }
 
     val startDest = if (!token.isNullOrEmpty()) Screen.Home.route else Screen.Login.route
 
@@ -70,7 +74,6 @@ fun AppNavGraph(
             )
         }
 
-        // MainScreen = host 4 tab bottom nav
         composable(Screen.Home.route) {
             MainScreen(
                 authViewModel = authViewModel,
@@ -79,36 +82,45 @@ fun AppNavGraph(
                         popUpTo(0) { inclusive = true }
                     }
                 },
-                onNavigateToServiceCreate = {
-                    navController.navigate(Screen.ServiceCreate.route)
-                },
-                onNavigateToServiceEdit = { id ->
-                    navController.navigate(Screen.ServiceEdit.createRoute(id))
+                onNavigateToCreateOrder = { svc ->
+                    // Simpan service yang dipilih lalu buka form
+                    if (svc != null) {
+                        preselectedServiceId = svc.id
+                        preselectedServiceName = svc.name
+                        preselectedServicePrice = svc.price
+                        preselectedServiceUnit = svc.unit
+                        preselectedServiceDays = svc.estimatedDays
+                    } else {
+                        preselectedServiceId = null
+                    }
+                    navController.navigate(Screen.OrderCreate.route)
                 }
             )
         }
 
-        // Form Tambah Layanan (Create)
-        composable(Screen.ServiceCreate.route) {
-            LaundryServiceFormScreen(
-                token = token ?: "",
-                serviceId = null,
-                onBack = { navController.popBackStack() },
-                onSaved = { navController.popBackStack() }
-            )
-        }
+        composable(Screen.OrderCreate.route) {
+            // Rekonstruksi LaundryService dari state jika ada
+            val preselected = if (preselectedServiceId != null) {
+                org.delcom.pam_2026_ifs23021_proyek1_fe.data.model.LaundryService(
+                    id = preselectedServiceId!!,
+                    userId = "",
+                    name = preselectedServiceName ?: "",
+                    description = "",
+                    price = preselectedServicePrice,
+                    unit = preselectedServiceUnit,
+                    estimatedDays = preselectedServiceDays,
+                    isActive = true
+                )
+            } else null
 
-        // Form Edit Layanan (Update)
-        composable(
-            route = Screen.ServiceEdit.route,
-            arguments = listOf(navArgument("serviceId") { type = NavType.StringType })
-        ) { back ->
-            val serviceId = back.arguments?.getString("serviceId") ?: return@composable
-            LaundryServiceFormScreen(
+            OrderCreateScreen(
                 token = token ?: "",
-                serviceId = serviceId,
+                preselectedService = preselected,
                 onBack = { navController.popBackStack() },
-                onSaved = { navController.popBackStack() }
+                onCreated = {
+                    preselectedServiceId = null
+                    navController.popBackStack()
+                }
             )
         }
     }

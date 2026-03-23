@@ -13,11 +13,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import org.delcom.pam_2026_ifs23021_proyek1_fe.data.model.LaundryService
 import org.delcom.pam_2026_ifs23021_proyek1_fe.viewmodel.AuthViewModel
 import org.delcom.pam_2026_ifs23021_proyek1_fe.viewmodel.LaundryServiceViewModel
 
@@ -25,7 +24,8 @@ import org.delcom.pam_2026_ifs23021_proyek1_fe.viewmodel.LaundryServiceViewModel
 fun HomeScreen(
     token: String,
     authViewModel: AuthViewModel,
-    onNavigateToServices: () -> Unit,
+    onNavigateToOrders: () -> Unit,
+    onBuatPesanan: (LaundryService) -> Unit,
     serviceViewModel: LaundryServiceViewModel = hiltViewModel()
 ) {
     val name by authViewModel.userName.collectAsState()
@@ -35,10 +35,7 @@ fun HomeScreen(
         if (token.isNotEmpty()) serviceViewModel.loadServices(token)
     }
 
-    val services = serviceState.services
-    val activeCount = services.count { it.isActive }
-    val inactiveCount = services.count { !it.isActive }
-    val avgPrice = if (services.isNotEmpty()) services.map { it.price }.average() else 0.0
+    val activeServices = serviceState.services.filter { it.isActive }
 
     Column(
         Modifier
@@ -62,9 +59,7 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Box(
-                    Modifier
-                        .size(60.dp)
-                        .clip(CircleShape)
+                    Modifier.size(56.dp).clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primary),
                     contentAlignment = Alignment.Center
                 ) {
@@ -76,235 +71,97 @@ fun HomeScreen(
                     )
                 }
                 Column {
-                    Text(
-                        "Selamat Datang,",
+                    Text("Halo,",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Text(
-                        name ?: "Pengguna",
+                        color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    Text(name ?: "Pelanggan",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Surface(
-                        shape = RoundedCornerShape(50),
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                    ) {
-                        Text(
-                            "LaundryKu v1.0",
-                            Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                        color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    Text("Mau laundry apa hari ini?",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f))
                 }
             }
         }
 
-        // Statistik Layanan
-        Text(
-            "Ringkasan Layanan",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            StatCard(
-                label = "Total Layanan",
-                value = services.size.toString(),
-                icon = Icons.Filled.LocalLaundryService,
-                modifier = Modifier.weight(1f)
-            )
-            StatCard(
-                label = "Aktif",
-                value = activeCount.toString(),
-                icon = Icons.Filled.CheckCircle,
-                modifier = Modifier.weight(1f),
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-            )
-            StatCard(
-                label = "Nonaktif",
-                value = inactiveCount.toString(),
-                icon = Icons.Filled.Cancel,
-                modifier = Modifier.weight(1f),
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        // Rata-rata harga
-        if (avgPrice > 0) {
-            Card(
-                Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                )
-            ) {
-                Row(
-                    Modifier.padding(16.dp).fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Icon(
-                            Icons.Filled.Payments, null,
-                            Modifier.size(32.dp),
-                            tint = MaterialTheme.colorScheme.tertiary
-                        )
-                        Column {
-                            Text(
-                                "Rata-rata Harga",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer
-                            )
-                            Text(
-                                "Rp ${"%,.0f".format(avgPrice)}",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer
-                            )
-                        }
-                    }
-                    Text(
-                        "per layanan",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
-                    )
-                }
-            }
-        }
-
-        // Quick access ke layanan
-        Text(
-            "Akses Cepat",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-
+        // Tombol cepat lihat pesanan
         Card(
-            onClick = onNavigateToServices,
-            modifier = Modifier.fillMaxWidth(),
+            onClick = onNavigateToOrders,
+            Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
             )
         ) {
             Row(
-                Modifier.padding(20.dp).fillMaxWidth(),
+                Modifier.padding(16.dp).fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Filled.LocalLaundryService, null,
-                                Modifier.size(28.dp),
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
-                    }
+                    Icon(Icons.Filled.Receipt, null,
+                        Modifier.size(28.dp),
+                        tint = MaterialTheme.colorScheme.secondary)
                     Column {
-                        Text(
-                            "Kelola Layanan",
+                        Text("Pesanan Saya",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Text(
-                            "Tambah, edit, atau hapus layanan laundry",
+                            color = MaterialTheme.colorScheme.onSecondaryContainer)
+                        Text("Lihat status & riwayat pesanan",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                        )
+                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f))
                     }
                 }
-                Icon(
-                    Icons.Filled.ChevronRight, null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                Icon(Icons.Filled.ChevronRight, null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer)
             }
         }
 
-        // Preview layanan terbaru
-        if (services.isNotEmpty()) {
-            Text(
-                "Layanan Terbaru",
+        // Daftar layanan tersedia
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Layanan Tersedia",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            services.take(3).forEach { svc ->
-                Card(
-                    Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    elevation = CardDefaults.cardElevation(1.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    )
-                ) {
-                    Row(
-                        Modifier.padding(14.dp).fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(Modifier.weight(1f)) {
-                            Text(
-                                svc.name,
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                "Rp ${"%,.0f".format(svc.price)}/${svc.unit} · ${svc.estimatedDays} hari",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Surface(
-                            shape = RoundedCornerShape(50),
-                            color = if (svc.isActive)
-                                MaterialTheme.colorScheme.secondaryContainer
-                            else
-                                MaterialTheme.colorScheme.errorContainer
-                        ) {
-                            Text(
-                                if (svc.isActive) "Aktif" else "Nonaktif",
-                                Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (svc.isActive)
-                                    MaterialTheme.colorScheme.onSecondaryContainer
-                                else
-                                    MaterialTheme.colorScheme.onErrorContainer,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-                }
-            }
-            if (services.size > 3) {
-                TextButton(
-                    onClick = onNavigateToServices,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                ) {
-                    Text("Lihat Semua ${services.size} Layanan")
-                    Icon(Icons.Filled.ChevronRight, null, Modifier.size(16.dp))
-                }
-            }
-        } else if (serviceState.isLoading) {
-            Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                fontWeight = FontWeight.Bold)
+            Text("${activeServices.size} layanan",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+
+        if (serviceState.isLoading) {
+            Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
+            }
+        } else if (activeServices.isEmpty()) {
+            Card(
+                Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Column(
+                    Modifier.padding(32.dp).fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(Icons.Filled.SearchOff, null, Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.outline)
+                    Text("Belum ada layanan tersedia",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        } else {
+            activeServices.forEach { svc ->
+                ServiceItemCard(
+                    service = svc,
+                    onPesan = { onBuatPesanan(svc) }
+                )
             }
         }
 
@@ -313,36 +170,66 @@ fun HomeScreen(
 }
 
 @Composable
-private fun StatCard(
-    label: String,
-    value: String,
-    icon: ImageVector,
-    modifier: Modifier,
-    containerColor: Color = MaterialTheme.colorScheme.primaryContainer,
-    contentColor: Color = MaterialTheme.colorScheme.onPrimaryContainer
+private fun ServiceItemCard(
+    service: LaundryService,
+    onPesan: () -> Unit
 ) {
     Card(
-        modifier,
+        Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = containerColor)
+        elevation = CardDefaults.cardElevation(2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(
-            Modifier.padding(12.dp).fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+        Row(
+            Modifier.padding(16.dp).fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Icon(icon, null, Modifier.size(26.dp), tint = contentColor)
-            Text(
-                value,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = contentColor
-            )
-            Text(
-                label,
-                style = MaterialTheme.typography.labelSmall,
-                color = contentColor.copy(alpha = 0.7f)
-            )
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.size(52.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(Icons.Filled.LocalLaundryService, null,
+                        Modifier.size(28.dp), tint = MaterialTheme.colorScheme.primary)
+                }
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(service.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold)
+                if (service.description.isNotEmpty()) {
+                    Text(service.description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2)
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Surface(shape = RoundedCornerShape(4.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer) {
+                        Text("Rp ${"%,.0f".format(service.price)}/${service.unit}",
+                            Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold)
+                    }
+                    Surface(shape = RoundedCornerShape(4.dp),
+                        color = MaterialTheme.colorScheme.tertiaryContainer) {
+                        Text("${service.estimatedDays} hari",
+                            Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer)
+                    }
+                }
+            }
+            Button(
+                onClick = onPesan,
+                shape = RoundedCornerShape(8.dp),
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+            ) {
+                Text("Pesan", style = MaterialTheme.typography.labelMedium)
+            }
         }
     }
 }

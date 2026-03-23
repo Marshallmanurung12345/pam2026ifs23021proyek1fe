@@ -2,7 +2,6 @@ package org.delcom.pam_2026_ifs23021_proyek1_fe.ui.navigation
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -12,9 +11,10 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
+import org.delcom.pam_2026_ifs23021_proyek1_fe.data.model.LaundryService
 import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.home.HomeScreen
-import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.laundryitem.LaundryServiceDetailScreen
-import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.laundryitem.LaundryServiceListScreen
+import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.order.OrderDetailScreen
+import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.order.OrderListScreen
 import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.profile.ProfileScreen
 import org.delcom.pam_2026_ifs23021_proyek1_fe.viewmodel.AuthViewModel
 
@@ -23,8 +23,7 @@ import org.delcom.pam_2026_ifs23021_proyek1_fe.viewmodel.AuthViewModel
 fun MainScreen(
     authViewModel: AuthViewModel,
     onLogout: () -> Unit,
-    onNavigateToServiceCreate: () -> Unit,
-    onNavigateToServiceEdit: (String) -> Unit
+    onNavigateToCreateOrder: (LaundryService?) -> Unit
 ) {
     val token by authViewModel.authToken.collectAsState()
     val isDarkMode by authViewModel.isDarkMode.collectAsState()
@@ -32,13 +31,13 @@ fun MainScreen(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // ID layanan yang dipilih dari Daftar Data
-    var selectedServiceId by remember { mutableStateOf<String?>(null) }
+    // State untuk detail pesanan yang dipilih
+    var selectedOrderId by remember { mutableStateOf<String?>(null) }
 
     val title = when (currentRoute) {
         "main_home" -> "Beranda"
-        "main_services" -> "Daftar Data"
-        "main_detail" -> "Detail Data"
+        "main_orders" -> "Pesanan Saya"
+        "main_detail" -> "Detail Pesanan"
         "main_profile" -> "Profil"
         else -> "LaundryKu"
     }
@@ -51,6 +50,11 @@ fun MainScreen(
         }
     }
 
+    val handleSessionExpired: () -> Unit = {
+        authViewModel.logout()
+        onLogout()
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -58,8 +62,8 @@ fun MainScreen(
                 actions = {
                     IconButton(onClick = { authViewModel.toggleDarkMode() }) {
                         Icon(
-                            imageVector = if (isDarkMode) Icons.Filled.LightMode else Icons.Filled.DarkMode,
-                            contentDescription = "Toggle tema",
+                            if (isDarkMode) Icons.Filled.LightMode else Icons.Filled.DarkMode,
+                            "Toggle tema",
                             tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
@@ -76,79 +80,77 @@ fun MainScreen(
                 NavigationBarItem(
                     icon = { Icon(Icons.Filled.Home, "Beranda") },
                     label = { Text("Beranda", style = MaterialTheme.typography.labelSmall) },
-                    selected = navBackStackEntry?.destination?.hierarchy?.any { it.route == "main_home" } == true,
+                    selected = navBackStackEntry?.destination?.hierarchy
+                        ?.any { it.route == "main_home" } == true,
                     onClick = { navigateTo("main_home") }
                 )
-                // Tab 2: Daftar Data
+                // Tab 2: Daftar Data (Pesanan)
                 NavigationBarItem(
-                    icon = { Icon(Icons.AutoMirrored.Filled.List, "Daftar Data") },
+                    icon = { Icon(Icons.Filled.Receipt, "Pesanan") },
                     label = { Text("Daftar Data", style = MaterialTheme.typography.labelSmall) },
-                    selected = navBackStackEntry?.destination?.hierarchy?.any { it.route == "main_services" } == true,
-                    onClick = { navigateTo("main_services") }
+                    selected = navBackStackEntry?.destination?.hierarchy
+                        ?.any { it.route == "main_orders" } == true,
+                    onClick = { navigateTo("main_orders") }
                 )
                 // Tab 3: Detail Data
                 NavigationBarItem(
-                    icon = { Icon(Icons.Filled.Info, "Detail Data") },
+                    icon = { Icon(Icons.Filled.Info, "Detail") },
                     label = { Text("Detail Data", style = MaterialTheme.typography.labelSmall) },
-                    selected = navBackStackEntry?.destination?.hierarchy?.any { it.route == "main_detail" } == true,
+                    selected = navBackStackEntry?.destination?.hierarchy
+                        ?.any { it.route == "main_detail" } == true,
                     onClick = { navigateTo("main_detail") }
                 )
                 // Tab 4: Profil
                 NavigationBarItem(
                     icon = { Icon(Icons.Filled.Person, "Profil") },
                     label = { Text("Profil", style = MaterialTheme.typography.labelSmall) },
-                    selected = navBackStackEntry?.destination?.hierarchy?.any { it.route == "main_profile" } == true,
+                    selected = navBackStackEntry?.destination?.hierarchy
+                        ?.any { it.route == "main_profile" } == true,
                     onClick = { navigateTo("main_profile") }
                 )
             }
         }
     ) { padding ->
-        NavHost(
-            navController,
-            startDestination = "main_home",
-            modifier = Modifier.padding(padding)
-        ) {
+        NavHost(navController, startDestination = "main_home",
+            modifier = Modifier.padding(padding)) {
 
-            // ─── Screen 1: Beranda ─────────────────────────────────────────
+            // Screen 1: Beranda — lihat layanan, tombol Pesan langsung
             composable("main_home") {
                 HomeScreen(
                     token = token ?: "",
                     authViewModel = authViewModel,
-                    onNavigateToServices = { navigateTo("main_services") }
+                    onNavigateToOrders = { navigateTo("main_orders") },
+                    onBuatPesanan = { svc -> onNavigateToCreateOrder(svc) }
                 )
             }
 
-            // ─── Screen 2: Daftar Data ─────────────────────────────────────
-            composable("main_services") {
-                LaundryServiceListScreen(
+            // Screen 2: Daftar Data — semua pesanan pelanggan
+            composable("main_orders") {
+                OrderListScreen(
                     token = token ?: "",
                     onNavigateToDetail = { id ->
-                        selectedServiceId = id
+                        selectedOrderId = id
                         navigateTo("main_detail")
                     },
-                    onNavigateToCreate = onNavigateToServiceCreate,
-                    onSessionExpired = {
-                        authViewModel.logout()
-                        onLogout()
-                    }
+                    onNavigateToCreate = { onNavigateToCreateOrder(null) },
+                    onSessionExpired = handleSessionExpired
                 )
             }
 
-            // ─── Screen 3: Detail Data ─────────────────────────────────────
+            // Screen 3: Detail Data — detail pesanan yang dipilih
             composable("main_detail") {
                 DetailDataScreen(
                     token = token ?: "",
-                    selectedServiceId = selectedServiceId,
-                    onGoToList = { navigateTo("main_services") },
-                    onEdit = { id -> onNavigateToServiceEdit(id) },
+                    selectedOrderId = selectedOrderId,
+                    onGoToList = { navigateTo("main_orders") },
                     onDeleted = {
-                        selectedServiceId = null
-                        navigateTo("main_services")
+                        selectedOrderId = null
+                        navigateTo("main_orders")
                     }
                 )
             }
 
-            // ─── Screen 4: Profil ──────────────────────────────────────────
+            // Screen 4: Profil
             composable("main_profile") {
                 ProfileScreen(authViewModel = authViewModel, onLogout = onLogout)
             }
@@ -156,58 +158,41 @@ fun MainScreen(
     }
 }
 
-// Composable terpisah untuk Screen 3 — menghindari lambda context error
 @Composable
 private fun DetailDataScreen(
     token: String,
-    selectedServiceId: String?,
+    selectedOrderId: String?,
     onGoToList: () -> Unit,
-    onEdit: (String) -> Unit,
     onDeleted: () -> Unit
 ) {
-    if (selectedServiceId == null) {
-        // Placeholder saat belum ada layanan dipilih
-        Box(
-            Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
+    if (selectedOrderId == null) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.padding(32.dp)
             ) {
-                Icon(
-                    Icons.Filled.TouchApp, null,
-                    Modifier.size(64.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    "Pilih layanan dari Daftar Data",
+                Icon(Icons.Filled.TouchApp, null,
+                    Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
+                Text("Pilih pesanan dari Daftar Data",
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    "Tap salah satu layanan di tab Daftar Data untuk melihat detailnya di sini.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Tap salah satu pesanan untuk melihat detailnya di sini.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.height(8.dp))
-                Button(
-                    onClick = onGoToList,
-                    shape = MaterialTheme.shapes.medium
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.List, null, Modifier.size(18.dp))
+                Button(onClick = onGoToList, shape = MaterialTheme.shapes.medium) {
+                    Icon(Icons.Filled.Receipt, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
                     Text("Buka Daftar Data")
                 }
             }
         }
     } else {
-        LaundryServiceDetailScreen(
-            serviceId = selectedServiceId,
+        OrderDetailScreen(
+            orderId = selectedOrderId,
             token = token,
             onBack = onGoToList,
-            onEdit = onEdit,
             onDeleted = onDeleted
         )
     }
