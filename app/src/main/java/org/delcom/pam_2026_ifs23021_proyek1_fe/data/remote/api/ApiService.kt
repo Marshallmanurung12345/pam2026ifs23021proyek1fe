@@ -56,3 +56,46 @@ interface LaundryServiceApiService {
         @Path("id") id: String
     ): Response<BaseResponse>
 }
+
+interface LaundryOrderApiService {
+    @GET("laundry-orders")
+    suspend fun getAll(
+        @Header("Authorization") token: String,
+        @Query("search") search: String?,
+        @Query("status") status: String?,
+        @Query("page") page: Int,
+        @Query("limit") limit: Int
+    ): Response<LaundryOrderListResponse>
+
+    @GET("laundry-orders/{id}")
+    suspend fun getById(
+        @Header("Authorization") token: String,
+        @Path("id") id: String
+    ): Response<LaundryOrderResponse>
+
+    @POST("laundry-orders")
+    suspend fun create(
+        @Header("Authorization") token: String,
+        @Body request: CreateOrderRequest
+    ): Response<BaseResponse>
+
+    @PUT("laundry-orders/{id}")
+    suspend fun update(
+        @Header("Authorization") token: String,
+        @Path("id") id: String,
+        @Body request: UpdateOrderRequest
+    ): Response<BaseResponse>
+
+    @PUT("laundry-orders/{id}/status")
+    suspend fun updateStatus(
+        @Header("Authorization") token: String,
+        @Path("id") id: String,
+        @Body request: UpdateOrderStatusRequest
+    ): Response<BaseResponse>
+
+    @DELETE("laundry-orders/{id}")
+    suspend fun delete(
+        @Header("Authorization") token: String,
+        @Path("id") id: String
+    ): Response<BaseResponse>
+}
