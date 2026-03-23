@@ -56,4 +56,3 @@ interface LaundryServiceApiService {
         @Path("id") id: String
     ): Response<BaseResponse>
 }
-
