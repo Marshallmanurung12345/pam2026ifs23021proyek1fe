@@ -126,7 +126,11 @@ fun MainScreen(
                         selectedServiceId = id
                         navigateTo("main_detail")
                     },
-                    onNavigateToCreate = onNavigateToServiceCreate
+                    onNavigateToCreate = onNavigateToServiceCreate,
+                    onSessionExpired = {
+                        authViewModel.logout()
+                        onLogout()
+                    }
                 )
             }
 

@@ -25,6 +25,7 @@ fun LaundryServiceListScreen(
     token: String,
     onNavigateToDetail: (String) -> Unit,
     onNavigateToCreate: () -> Unit,
+    onSessionExpired: (() -> Unit)? = null,
     viewModel: LaundryServiceViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -33,6 +34,11 @@ fun LaundryServiceListScreen(
     // State lokal untuk search & filter
     var searchQuery by remember { mutableStateOf("") }
     var filterActive by remember { mutableStateOf<Boolean?>(null) } // null=semua, true=aktif, false=nonaktif
+
+    // Auto logout saat token expired
+    LaunchedEffect(uiState.tokenExpired) {
+        if (uiState.tokenExpired) onSessionExpired?.invoke()
+    }
 
     // Load awal
     LaunchedEffect(token) {
