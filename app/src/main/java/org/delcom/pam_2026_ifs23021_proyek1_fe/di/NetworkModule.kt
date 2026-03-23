@@ -10,7 +10,9 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.delcom.pam_2026_ifs23021_proyek1_fe.BuildConfig
-import org.delcom.pam_2026_ifs23021_proyek1_fe.data.remote.api.*
+import org.delcom.pam_2026_ifs23021_proyek1_fe.data.remote.api.AuthApiService
+import org.delcom.pam_2026_ifs23021_proyek1_fe.data.remote.api.LaundryServiceApiService
+import org.delcom.pam_2026_ifs23021_proyek1_fe.data.remote.api.UserApiService
 import retrofit2.Retrofit
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
@@ -24,8 +26,7 @@ import javax.net.ssl.X509TrustManager
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    @Provides
-    @Singleton
+    @Provides @Singleton
     fun provideJson(): Json = Json {
         ignoreUnknownKeys = true
         isLenient = true
@@ -33,8 +34,7 @@ object NetworkModule {
         explicitNulls = false
     }
 
-    @Provides
-    @Singleton
+    @Provides @Singleton
     fun provideOkHttpClient(): OkHttpClient {
         val logging = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
@@ -57,8 +57,7 @@ object NetworkModule {
             .build()
     }
 
-    @Provides
-    @Singleton
+    @Provides @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient, json: Json): Retrofit {
         val contentType = "application/json".toMediaType()
         return Retrofit.Builder()
@@ -79,8 +78,4 @@ object NetworkModule {
     @Provides @Singleton
     fun provideLaundryServiceApiService(retrofit: Retrofit): LaundryServiceApiService =
         retrofit.create(LaundryServiceApiService::class.java)
-
-    @Provides @Singleton
-    fun provideLaundryOrderApiService(retrofit: Retrofit): LaundryOrderApiService =
-        retrofit.create(LaundryOrderApiService::class.java)
 }

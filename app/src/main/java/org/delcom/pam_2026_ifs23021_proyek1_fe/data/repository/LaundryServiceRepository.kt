@@ -5,18 +5,16 @@ import org.delcom.pam_2026_ifs23021_proyek1_fe.data.remote.api.LaundryServiceApi
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// TokenExpiredException didefinisikan di LaundryOrderRepository.kt
-// tidak perlu didefinisikan ulang di sini
+class TokenExpiredException(
+    message: String = "Sesi habis, silakan login ulang"
+) : Exception(message)
 
 @Singleton
 class LaundryServiceRepository @Inject constructor(
     private val api: LaundryServiceApiService
 ) {
-    suspend fun getAll(
-        token: String,
-        search: String? = null,
-        isActive: Boolean? = null
-    ): Result<LaundryServiceListResponse> = try {
+    suspend fun getAll(token: String, search: String? = null, isActive: Boolean? = null)
+            : Result<LaundryServiceListResponse> = try {
         val r = api.getAll("Bearer $token", search?.ifBlank { null }, isActive)
         when {
             r.isSuccessful -> Result.success(r.body() ?: LaundryServiceListResponse())
@@ -34,25 +32,21 @@ class LaundryServiceRepository @Inject constructor(
         }
     } catch (e: Exception) { Result.failure(e) }
 
-    suspend fun create(
-        token: String, req: CreateLaundryServiceRequest
-    ): Result<BaseResponse> = try {
+    suspend fun create(token: String, req: CreateLaundryServiceRequest): Result<BaseResponse> = try {
         val r = api.create("Bearer $token", req)
         when {
             r.isSuccessful -> Result.success(r.body() ?: BaseResponse(message = "Berhasil"))
             r.code() == 401 || r.code() == 403 -> Result.failure(TokenExpiredException())
-            else -> Result.failure(Exception("Error ${r.code()}"))
+            else -> Result.failure(Exception("Gagal (${r.code()})"))
         }
     } catch (e: Exception) { Result.failure(e) }
 
-    suspend fun update(
-        token: String, id: String, req: CreateLaundryServiceRequest
-    ): Result<BaseResponse> = try {
+    suspend fun update(token: String, id: String, req: CreateLaundryServiceRequest): Result<BaseResponse> = try {
         val r = api.update("Bearer $token", id, req)
         when {
             r.isSuccessful -> Result.success(r.body() ?: BaseResponse(message = "Berhasil"))
             r.code() == 401 || r.code() == 403 -> Result.failure(TokenExpiredException())
-            else -> Result.failure(Exception("Error ${r.code()}"))
+            else -> Result.failure(Exception("Gagal (${r.code()})"))
         }
     } catch (e: Exception) { Result.failure(e) }
 
@@ -61,7 +55,7 @@ class LaundryServiceRepository @Inject constructor(
         when {
             r.isSuccessful -> Result.success(r.body() ?: BaseResponse(message = "Berhasil"))
             r.code() == 401 || r.code() == 403 -> Result.failure(TokenExpiredException())
-            else -> Result.failure(Exception("Error ${r.code()}"))
+            else -> Result.failure(Exception("Gagal (${r.code()})"))
         }
     } catch (e: Exception) { Result.failure(e) }
 }

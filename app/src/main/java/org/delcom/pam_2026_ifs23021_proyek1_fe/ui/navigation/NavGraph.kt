@@ -11,14 +11,17 @@ import androidx.navigation.*
 import androidx.navigation.compose.*
 import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.auth.LoginScreen
 import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.auth.RegisterScreen
-import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.order.OrderCreateScreen
+import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.laundryitem.LaundryServiceFormScreen
 import org.delcom.pam_2026_ifs23021_proyek1_fe.viewmodel.AuthViewModel
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
     object Home : Screen("home")
-    object OrderCreate : Screen("order/create")
+    object ServiceCreate : Screen("services/create")
+    object ServiceEdit : Screen("services/{serviceId}/edit") {
+        fun createRoute(id: String) = "services/$id/edit"
+    }
 }
 
 @Composable
@@ -30,10 +33,7 @@ fun AppNavGraph(
     val token by authViewModel.authToken.collectAsState()
 
     var initialized by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(300)
-        initialized = true
-    }
+    LaunchedEffect(Unit) { kotlinx.coroutines.delay(300); initialized = true }
 
     if (!initialized) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -41,13 +41,6 @@ fun AppNavGraph(
         }
         return
     }
-
-    // State untuk pre-selected service saat order dari Beranda
-    var preselectedServiceId by remember { mutableStateOf<String?>(null) }
-    var preselectedServiceName by remember { mutableStateOf<String?>(null) }
-    var preselectedServicePrice by remember { mutableStateOf(0.0) }
-    var preselectedServiceUnit by remember { mutableStateOf("") }
-    var preselectedServiceDays by remember { mutableStateOf(1) }
 
     val startDest = if (!token.isNullOrEmpty()) Screen.Home.route else Screen.Login.route
 
@@ -58,8 +51,7 @@ fun AppNavGraph(
                 viewModel = authViewModel,
                 onLoginSuccess = {
                     navController.navigate(Screen.Home.route) {
-                        popUpTo(0) { inclusive = true }
-                        launchSingleTop = true
+                        popUpTo(0) { inclusive = true }; launchSingleTop = true
                     }
                 },
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) }
@@ -78,49 +70,30 @@ fun AppNavGraph(
             MainScreen(
                 authViewModel = authViewModel,
                 onLogout = {
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                    navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } }
                 },
-                onNavigateToCreateOrder = { svc ->
-                    // Simpan service yang dipilih lalu buka form
-                    if (svc != null) {
-                        preselectedServiceId = svc.id
-                        preselectedServiceName = svc.name
-                        preselectedServicePrice = svc.price
-                        preselectedServiceUnit = svc.unit
-                        preselectedServiceDays = svc.estimatedDays
-                    } else {
-                        preselectedServiceId = null
-                    }
-                    navController.navigate(Screen.OrderCreate.route)
-                }
+                onNavigateToServiceCreate = { navController.navigate(Screen.ServiceCreate.route) },
+                onNavigateToServiceEdit = { id -> navController.navigate(Screen.ServiceEdit.createRoute(id)) }
             )
         }
 
-        composable(Screen.OrderCreate.route) {
-            // Rekonstruksi LaundryService dari state jika ada
-            val preselected = if (preselectedServiceId != null) {
-                org.delcom.pam_2026_ifs23021_proyek1_fe.data.model.LaundryService(
-                    id = preselectedServiceId!!,
-                    userId = "",
-                    name = preselectedServiceName ?: "",
-                    description = "",
-                    price = preselectedServicePrice,
-                    unit = preselectedServiceUnit,
-                    estimatedDays = preselectedServiceDays,
-                    isActive = true
-                )
-            } else null
-
-            OrderCreateScreen(
-                token = token ?: "",
-                preselectedService = preselected,
+        composable(Screen.ServiceCreate.route) {
+            LaundryServiceFormScreen(
+                token = token ?: "", serviceId = null,
                 onBack = { navController.popBackStack() },
-                onCreated = {
-                    preselectedServiceId = null
-                    navController.popBackStack()
-                }
+                onSaved = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.ServiceEdit.route,
+            arguments = listOf(navArgument("serviceId") { type = NavType.StringType })
+        ) { back ->
+            val serviceId = back.arguments?.getString("serviceId") ?: return@composable
+            LaundryServiceFormScreen(
+                token = token ?: "", serviceId = serviceId,
+                onBack = { navController.popBackStack() },
+                onSaved = { navController.popBackStack() }
             )
         }
     }

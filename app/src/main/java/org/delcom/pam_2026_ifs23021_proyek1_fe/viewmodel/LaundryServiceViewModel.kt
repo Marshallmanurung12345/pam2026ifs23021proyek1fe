@@ -38,16 +38,10 @@ class LaundryServiceViewModel @Inject constructor(
                     )
                 },
                 onFailure = { e ->
-                    if (e is TokenExpiredException) {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false, tokenExpired = true
-                        )
-                    } else {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            error = e.message ?: "Gagal memuat layanan"
-                        )
-                    }
+                    if (e is TokenExpiredException)
+                        _uiState.value = _uiState.value.copy(isLoading = false, tokenExpired = true)
+                    else
+                        _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
                 }
             )
         }
@@ -59,86 +53,51 @@ class LaundryServiceViewModel @Inject constructor(
             repo.getById(token, id).fold(
                 onSuccess = { resp ->
                     _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        selectedService = resp.data?.laundryService
-                    )
+                        isLoading = false, selectedService = resp.data?.laundryService)
                 },
                 onFailure = { e ->
-                    if (e is TokenExpiredException) {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false, tokenExpired = true
-                        )
-                    } else {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false, error = e.message
-                        )
-                    }
+                    if (e is TokenExpiredException)
+                        _uiState.value = _uiState.value.copy(isLoading = false, tokenExpired = true)
+                    else
+                        _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
                 }
             )
         }
     }
 
-    fun create(
-        token: String, name: String, description: String,
-        price: Double, unit: String, estimatedDays: Int,
-        onSuccess: () -> Unit
-    ) {
+    fun create(token: String, name: String, description: String,
+               price: Double, unit: String, estimatedDays: Int, onSuccess: () -> Unit) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            repo.create(
-                token,
-                CreateLaundryServiceRequest(name, description, price, unit, estimatedDays)
-            ).fold(
+            repo.create(token, CreateLaundryServiceRequest(name, description, price, unit, estimatedDays)).fold(
                 onSuccess = { resp ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        successMessage = resp.message ?: "Layanan berhasil ditambahkan"
-                    )
+                    _uiState.value = _uiState.value.copy(isLoading = false, successMessage = resp.message)
                     onSuccess()
                 },
                 onFailure = { e ->
-                    if (e is TokenExpiredException) {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false, tokenExpired = true
-                        )
-                    } else {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false, error = e.message
-                        )
-                    }
+                    if (e is TokenExpiredException)
+                        _uiState.value = _uiState.value.copy(isLoading = false, tokenExpired = true)
+                    else
+                        _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
                 }
             )
         }
     }
 
-    fun update(
-        token: String, id: String, name: String, description: String,
-        price: Double, unit: String, estimatedDays: Int,
-        onSuccess: () -> Unit
-    ) {
+    fun update(token: String, id: String, name: String, description: String,
+               price: Double, unit: String, estimatedDays: Int, onSuccess: () -> Unit) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            repo.update(
-                token, id,
-                CreateLaundryServiceRequest(name, description, price, unit, estimatedDays)
-            ).fold(
+            repo.update(token, id, CreateLaundryServiceRequest(name, description, price, unit, estimatedDays)).fold(
                 onSuccess = { resp ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        successMessage = resp.message ?: "Layanan berhasil diperbarui"
-                    )
+                    _uiState.value = _uiState.value.copy(isLoading = false, successMessage = resp.message)
                     onSuccess()
                 },
                 onFailure = { e ->
-                    if (e is TokenExpiredException) {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false, tokenExpired = true
-                        )
-                    } else {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false, error = e.message
-                        )
-                    }
+                    if (e is TokenExpiredException)
+                        _uiState.value = _uiState.value.copy(isLoading = false, tokenExpired = true)
+                    else
+                        _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
                 }
             )
         }
@@ -148,30 +107,17 @@ class LaundryServiceViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             repo.delete(token, id).fold(
-                onSuccess = {
-                    _uiState.value = _uiState.value.copy(isLoading = false)
-                    onSuccess()
-                },
+                onSuccess = { _uiState.value = _uiState.value.copy(isLoading = false); onSuccess() },
                 onFailure = { e ->
-                    if (e is TokenExpiredException) {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false, tokenExpired = true
-                        )
-                    } else {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false, error = e.message
-                        )
-                    }
+                    if (e is TokenExpiredException)
+                        _uiState.value = _uiState.value.copy(isLoading = false, tokenExpired = true)
+                    else
+                        _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
                 }
             )
         }
     }
 
-    fun clearMessages() {
-        _uiState.value = _uiState.value.copy(error = null, successMessage = null)
-    }
-
-    fun clearSelected() {
-        _uiState.value = _uiState.value.copy(selectedService = null)
-    }
+    fun clearMessages() { _uiState.value = _uiState.value.copy(error = null, successMessage = null) }
+    fun clearSelected() { _uiState.value = _uiState.value.copy(selectedService = null) }
 }
