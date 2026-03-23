@@ -5,9 +5,7 @@ import org.delcom.pam_2026_ifs23021_proyek1_fe.data.remote.api.LaundryServiceApi
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// Reuse TokenExpiredException yang sama
-// Kalau belum ada di project, definisikan di sini:
-// class TokenExpiredException(message: String = "Sesi habis, silakan login ulang") : Exception(message)
+class TokenExpiredException(message: String = "Sesi habis, silakan login ulang") : Exception(message)
 
 @Singleton
 class LaundryServiceRepository @Inject constructor(
