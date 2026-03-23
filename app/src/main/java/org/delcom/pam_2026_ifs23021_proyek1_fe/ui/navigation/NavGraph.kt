@@ -15,34 +15,39 @@ import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.order.*
 import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.laundryitem.*
 import org.delcom.pam_2026_ifs23021_proyek1_fe.viewmodel.AuthViewModel
 
+// ─── Route Definitions ─────────────────────────────────────────────────────
+// PENTING: "create" harus didaftarkan SEBELUM "{id}" agar tidak konflik!
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
     object Home : Screen("home")
+
+    // Order routes
+    object OrderCreate : Screen("orders/create")
     object OrderDetail : Screen("orders/{orderId}") {
         fun createRoute(id: String) = "orders/$id"
     }
-    object OrderCreate : Screen("orders/create")
+
+    // Service routes
+    object ServiceCreate : Screen("services/create")
     object ServiceDetail : Screen("services/{serviceId}") {
         fun createRoute(id: String) = "services/$id"
     }
-    object ServiceCreate : Screen("services/create")
     object ServiceEdit : Screen("services/{serviceId}/edit") {
         fun createRoute(id: String) = "services/$id/edit"
     }
 }
 
 @Composable
-fun AppNavGraph(modifier: Modifier = Modifier) {
+fun AppNavGraph(
+    modifier: Modifier = Modifier,
+    authViewModel: AuthViewModel = hiltViewModel()
+) {
     val navController = rememberNavController()
-    val authViewModel: AuthViewModel = hiltViewModel()
     val token by authViewModel.authToken.collectAsState()
-    val uiState by authViewModel.uiState.collectAsState()
 
-    // Tunggu DataStore selesai load (null = belum load, "" atau value = sudah load)
     var initialized by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
-        // Beri waktu sebentar untuk DataStore emit pertama kali
         kotlinx.coroutines.delay(300)
         initialized = true
     }
@@ -54,7 +59,7 @@ fun AppNavGraph(modifier: Modifier = Modifier) {
         return
     }
 
-    val startDest = if (token != null && token!!.isNotEmpty()) Screen.Home.route else Screen.Login.route
+    val startDest = if (!token.isNullOrEmpty()) Screen.Home.route else Screen.Login.route
 
     NavHost(navController = navController, startDestination = startDest, modifier = modifier) {
 
@@ -95,7 +100,19 @@ fun AppNavGraph(modifier: Modifier = Modifier) {
             )
         }
 
-        composable(Screen.OrderDetail.route) { back ->
+        // ─── Order: create HARUS sebelum {orderId} ───────────────────────────
+        composable(Screen.OrderCreate.route) {
+            OrderCreateScreen(
+                token = token ?: "",
+                onBack = { navController.popBackStack() },
+                onCreated = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.OrderDetail.route,
+            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+        ) { back ->
             val orderId = back.arguments?.getString("orderId") ?: return@composable
             OrderDetailScreen(
                 orderId = orderId,
@@ -105,15 +122,20 @@ fun AppNavGraph(modifier: Modifier = Modifier) {
             )
         }
 
-        composable(Screen.OrderCreate.route) {
-            OrderCreateScreen(
+        // ─── Service: create HARUS sebelum {serviceId} ───────────────────────
+        composable(Screen.ServiceCreate.route) {
+            LaundryServiceFormScreen(
                 token = token ?: "",
+                serviceId = null,
                 onBack = { navController.popBackStack() },
-                onCreated = { navController.popBackStack() }
+                onSaved = { navController.popBackStack() }
             )
         }
 
-        composable(Screen.ServiceDetail.route) { back ->
+        composable(
+            route = Screen.ServiceDetail.route,
+            arguments = listOf(navArgument("serviceId") { type = NavType.StringType })
+        ) { back ->
             val serviceId = back.arguments?.getString("serviceId") ?: return@composable
             LaundryServiceDetailScreen(
                 serviceId = serviceId,
@@ -124,16 +146,10 @@ fun AppNavGraph(modifier: Modifier = Modifier) {
             )
         }
 
-        composable(Screen.ServiceCreate.route) {
-            LaundryServiceFormScreen(
-                token = token ?: "",
-                serviceId = null,
-                onBack = { navController.popBackStack() },
-                onSaved = { navController.popBackStack() }
-            )
-        }
-
-        composable(Screen.ServiceEdit.route) { back ->
+        composable(
+            route = Screen.ServiceEdit.route,
+            arguments = listOf(navArgument("serviceId") { type = NavType.StringType })
+        ) { back ->
             val serviceId = back.arguments?.getString("serviceId") ?: return@composable
             LaundryServiceFormScreen(
                 token = token ?: "",

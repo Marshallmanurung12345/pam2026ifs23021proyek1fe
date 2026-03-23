@@ -23,12 +23,25 @@ class AuthViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
-    // SharingStarted.Eagerly agar langsung load dari DataStore saat ViewModel dibuat
     val authToken: StateFlow<String?> = repo.authToken
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val userName: StateFlow<String?> = repo.userName
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    val username: StateFlow<String?> = repo.username
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    val userId: StateFlow<String?> = repo.userId
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    // Dark mode preference
+    private val _isDarkMode = MutableStateFlow(false)
+    val isDarkMode: StateFlow<Boolean> = _isDarkMode.asStateFlow()
+
+    fun toggleDarkMode() {
+        _isDarkMode.value = !_isDarkMode.value
+    }
 
     fun login(username: String, password: String) {
         viewModelScope.launch {

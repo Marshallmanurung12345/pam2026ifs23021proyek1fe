@@ -58,13 +58,15 @@ interface LaundryServiceApiService {
 }
 
 interface LaundryOrderApiService {
+    // PENTING: @Query dengan nilai null TIDAK akan dikirim oleh Retrofit
+    // Jadi pastikan kita selalu pass null (bukan "") untuk parameter opsional
     @GET("laundry-orders")
     suspend fun getAll(
         @Header("Authorization") token: String,
-        @Query("search") search: String? = null,
-        @Query("status") status: String? = null,
-        @Query("page") page: Int = 1,
-        @Query("limit") limit: Int = 10
+        @Query("search") search: String?,
+        @Query("status") status: String?,
+        @Query("page") page: Int,
+        @Query("limit") limit: Int
     ): Response<LaundryOrderListResponse>
 
     @GET("laundry-orders/{id}")

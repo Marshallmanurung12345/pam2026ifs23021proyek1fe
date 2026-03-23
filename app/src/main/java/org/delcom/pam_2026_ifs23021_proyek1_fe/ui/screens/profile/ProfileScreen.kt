@@ -24,21 +24,30 @@ fun ProfileScreen(
     onLogout: () -> Unit
 ) {
     val userName by authViewModel.userName.collectAsState()
+    val username by authViewModel.username.collectAsState()
+    val isDarkMode by authViewModel.isDarkMode.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     if (showLogoutDialog) {
         ConfirmDialog(
             title = "Keluar",
-            message = "Apakah Anda yakin ingin keluar?",
+            message = "Apakah Anda yakin ingin keluar dari akun ini?",
             confirmLabel = "Keluar",
-            onConfirm = { showLogoutDialog = false; authViewModel.logout(); onLogout() },
+            onConfirm = {
+                showLogoutDialog = false
+                authViewModel.logout()
+                onLogout()
+            },
             onDismiss = { showLogoutDialog = false }
         )
     }
 
     Column(
-        Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
-            .verticalScroll(rememberScrollState()).padding(16.dp),
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -46,7 +55,10 @@ fun ProfileScreen(
 
         // Avatar
         Box(
-            Modifier.size(100.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
+            Modifier
+                .size(100.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -57,40 +69,121 @@ fun ProfileScreen(
             )
         }
 
-        Text(userName ?: "Pengguna", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(
+            userName ?: "Pengguna",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+        if (!username.isNullOrEmpty()) {
+            Text(
+                "@$username",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
 
-        // Info Card
-        Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), elevation = CardDefaults.cardElevation(2.dp)) {
-            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text("Informasi Akun", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+        // ─── Info Card ─────────────────────────────────────────────────────
+        Card(
+            Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(2.dp)
+        ) {
+            Column(
+                Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    "Informasi Akun",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
                 HorizontalDivider()
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Icon(Icons.Filled.Person, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
-                    Column {
-                        Text("Nama", style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(userName ?: "-", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+
+                ProfileRow(
+                    icon = Icons.Filled.Person,
+                    label = "Nama Lengkap",
+                    value = userName ?: "-"
+                )
+                ProfileRow(
+                    icon = Icons.Filled.AlternateEmail,
+                    label = "Username",
+                    value = username?.let { "@$it" } ?: "-"
+                )
+                ProfileRow(
+                    icon = Icons.Filled.LocalLaundryService,
+                    label = "Aplikasi",
+                    value = "LaundryKu v1.0"
+                )
+            }
+        }
+
+        // ─── Tampilan Card ─────────────────────────────────────────────────
+        Card(
+            Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(2.dp)
+        ) {
+            Column(
+                Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    "Tampilan",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                HorizontalDivider()
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            if (isDarkMode) Icons.Filled.DarkMode else Icons.Filled.LightMode,
+                            null,
+                            Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Column {
+                            Text(
+                                if (isDarkMode) "Mode Gelap" else "Mode Terang",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                if (isDarkMode) "Tema gelap aktif" else "Tema terang aktif",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
-                }
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Icon(Icons.Filled.LocalLaundryService, null, Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.primary)
-                    Column {
-                        Text("Aplikasi", style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("LaundryKu v1.0", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                    }
+                    Switch(
+                        checked = isDarkMode,
+                        onCheckedChange = { authViewModel.toggleDarkMode() },
+                        thumbContent = {
+                            Icon(
+                                if (isDarkMode) Icons.Filled.DarkMode else Icons.Filled.LightMode,
+                                null,
+                                Modifier.size(SwitchDefaults.IconSize)
+                            )
+                        }
+                    )
                 }
             }
         }
 
         Spacer(Modifier.height(8.dp))
 
+        // Logout button
         Button(
             onClick = { showLogoutDialog = true },
-            modifier = Modifier.fillMaxWidth().height(52.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.errorContainer,
                 contentColor = MaterialTheme.colorScheme.onErrorContainer
@@ -101,6 +194,38 @@ fun ProfileScreen(
             Spacer(Modifier.width(8.dp))
             Text("Keluar", fontWeight = FontWeight.SemiBold)
         }
+
         Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun ProfileRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    value: String
+) {
+    Row(
+        Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(
+            icon, null,
+            Modifier.size(20.dp),
+            tint = MaterialTheme.colorScheme.primary
+        )
+        Column {
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                value,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+        }
     }
 }

@@ -27,9 +27,16 @@ fun MainScreen(
     onNavigateToServiceEdit: (String) -> Unit
 ) {
     val token by authViewModel.authToken.collectAsState()
+    val isDarkMode by authViewModel.isDarkMode.collectAsState()
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    // Saat token expired di screen manapun → logout otomatis
+    val handleSessionExpired: () -> Unit = {
+        authViewModel.logout()
+        onLogout()
+    }
 
     val title = when (currentRoute) {
         "main_home" -> "Beranda"
@@ -42,7 +49,16 @@ fun MainScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(title) },
+                title = { Text(title, style = MaterialTheme.typography.titleLarge) },
+                actions = {
+                    IconButton(onClick = { authViewModel.toggleDarkMode() }) {
+                        Icon(
+                            imageVector = if (isDarkMode) Icons.Filled.LightMode else Icons.Filled.DarkMode,
+                            contentDescription = if (isDarkMode) "Mode Terang" else "Mode Gelap",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -50,16 +66,16 @@ fun MainScreen(
             )
         },
         bottomBar = {
-            NavigationBar {
+            NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                 listOf(
                     Triple("main_home", Icons.Filled.Home, "Beranda"),
-                    Triple("main_orders", Icons.Filled.List, "Pesanan"),
+                    Triple("main_orders", Icons.Filled.Receipt, "Pesanan"),
                     Triple("main_services", Icons.Filled.LocalLaundryService, "Layanan"),
                     Triple("main_profile", Icons.Filled.Person, "Profil")
                 ).forEach { (route, icon, label) ->
                     NavigationBarItem(
                         icon = { Icon(icon, label) },
-                        label = { Text(label) },
+                        label = { Text(label, style = MaterialTheme.typography.labelSmall) },
                         selected = navBackStackEntry?.destination?.hierarchy?.any { it.route == route } == true,
                         onClick = {
                             navController.navigate(route) {
@@ -79,14 +95,16 @@ fun MainScreen(
                     token = token ?: "",
                     authViewModel = authViewModel,
                     onNavigateToOrders = { navController.navigate("main_orders") },
-                    onNavigateToServices = { navController.navigate("main_services") }
+                    onNavigateToServices = { navController.navigate("main_services") },
+                    onSessionExpired = handleSessionExpired
                 )
             }
             composable("main_orders") {
                 OrderListScreen(
                     token = token ?: "",
                     onNavigateToDetail = onNavigateToOrderDetail,
-                    onNavigateToCreate = onNavigateToOrderCreate
+                    onNavigateToCreate = onNavigateToOrderCreate,
+                    onSessionExpired = handleSessionExpired
                 )
             }
             composable("main_services") {
