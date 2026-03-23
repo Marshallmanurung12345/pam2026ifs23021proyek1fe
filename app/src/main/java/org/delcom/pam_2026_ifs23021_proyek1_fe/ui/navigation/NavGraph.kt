@@ -6,29 +6,20 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.*
 import androidx.navigation.compose.*
 import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.auth.LoginScreen
 import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.auth.RegisterScreen
-import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.order.*
-import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.laundryitem.*
+import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.laundryitem.LaundryServiceDetailScreen
+import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.laundryitem.LaundryServiceFormScreen
 import org.delcom.pam_2026_ifs23021_proyek1_fe.viewmodel.AuthViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 
-// ─── Route Definitions ─────────────────────────────────────────────────────
-// PENTING: "create" harus didaftarkan SEBELUM "{id}" agar tidak konflik!
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
     object Home : Screen("home")
-
-    // Order routes
-    object OrderCreate : Screen("orders/create")
-    object OrderDetail : Screen("orders/{orderId}") {
-        fun createRoute(id: String) = "orders/$id"
-    }
-
-    // Service routes
+    // Service create HARUS sebelum {serviceId}
     object ServiceCreate : Screen("services/create")
     object ServiceDetail : Screen("services/{serviceId}") {
         fun createRoute(id: String) = "services/$id"
@@ -92,37 +83,18 @@ fun AppNavGraph(
                         popUpTo(0) { inclusive = true }
                     }
                 },
-                onNavigateToOrderDetail = { id -> navController.navigate(Screen.OrderDetail.createRoute(id)) },
-                onNavigateToOrderCreate = { navController.navigate(Screen.OrderCreate.route) },
-                onNavigateToServiceDetail = { id -> navController.navigate(Screen.ServiceDetail.createRoute(id)) },
-                onNavigateToServiceCreate = { navController.navigate(Screen.ServiceCreate.route) },
-                onNavigateToServiceEdit = { id -> navController.navigate(Screen.ServiceEdit.createRoute(id)) }
+                onNavigateToServiceDetail = { id ->
+                    navController.navigate(Screen.ServiceDetail.createRoute(id))
+                },
+                onNavigateToServiceCreate = {
+                    navController.navigate(Screen.ServiceCreate.route)
+                },
+                onNavigateToServiceEdit = { id ->
+                    navController.navigate(Screen.ServiceEdit.createRoute(id))
+                }
             )
         }
 
-        // ─── Order: create HARUS sebelum {orderId} ───────────────────────────
-        composable(Screen.OrderCreate.route) {
-            OrderCreateScreen(
-                token = token ?: "",
-                onBack = { navController.popBackStack() },
-                onCreated = { navController.popBackStack() }
-            )
-        }
-
-        composable(
-            route = Screen.OrderDetail.route,
-            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
-        ) { back ->
-            val orderId = back.arguments?.getString("orderId") ?: return@composable
-            OrderDetailScreen(
-                orderId = orderId,
-                token = token ?: "",
-                onBack = { navController.popBackStack() },
-                onDeleted = { navController.popBackStack() }
-            )
-        }
-
-        // ─── Service: create HARUS sebelum {serviceId} ───────────────────────
         composable(Screen.ServiceCreate.route) {
             LaundryServiceFormScreen(
                 token = token ?: "",

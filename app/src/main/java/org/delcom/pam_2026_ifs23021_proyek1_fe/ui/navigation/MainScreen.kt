@@ -10,7 +10,6 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.home.HomeScreen
-import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.order.OrderListScreen
 import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.laundryitem.LaundryServiceListScreen
 import org.delcom.pam_2026_ifs23021_proyek1_fe.ui.screens.profile.ProfileScreen
 import org.delcom.pam_2026_ifs23021_proyek1_fe.viewmodel.AuthViewModel
@@ -20,8 +19,6 @@ import org.delcom.pam_2026_ifs23021_proyek1_fe.viewmodel.AuthViewModel
 fun MainScreen(
     authViewModel: AuthViewModel,
     onLogout: () -> Unit,
-    onNavigateToOrderDetail: (String) -> Unit,
-    onNavigateToOrderCreate: () -> Unit,
     onNavigateToServiceDetail: (String) -> Unit,
     onNavigateToServiceCreate: () -> Unit,
     onNavigateToServiceEdit: (String) -> Unit
@@ -32,16 +29,9 @@ fun MainScreen(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Saat token expired di screen manapun → logout otomatis
-    val handleSessionExpired: () -> Unit = {
-        authViewModel.logout()
-        onLogout()
-    }
-
     val title = when (currentRoute) {
         "main_home" -> "Beranda"
-        "main_orders" -> "Pesanan"
-        "main_services" -> "Layanan"
+        "main_services" -> "Daftar Layanan"
         "main_profile" -> "Profil"
         else -> "LaundryKu"
     }
@@ -54,7 +44,7 @@ fun MainScreen(
                     IconButton(onClick = { authViewModel.toggleDarkMode() }) {
                         Icon(
                             imageVector = if (isDarkMode) Icons.Filled.LightMode else Icons.Filled.DarkMode,
-                            contentDescription = if (isDarkMode) "Mode Terang" else "Mode Gelap",
+                            contentDescription = "Toggle tema",
                             tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
@@ -69,17 +59,19 @@ fun MainScreen(
             NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                 listOf(
                     Triple("main_home", Icons.Filled.Home, "Beranda"),
-                    Triple("main_orders", Icons.Filled.Receipt, "Pesanan"),
                     Triple("main_services", Icons.Filled.LocalLaundryService, "Layanan"),
                     Triple("main_profile", Icons.Filled.Person, "Profil")
                 ).forEach { (route, icon, label) ->
                     NavigationBarItem(
                         icon = { Icon(icon, label) },
                         label = { Text(label, style = MaterialTheme.typography.labelSmall) },
-                        selected = navBackStackEntry?.destination?.hierarchy?.any { it.route == route } == true,
+                        selected = navBackStackEntry?.destination?.hierarchy
+                            ?.any { it.route == route } == true,
                         onClick = {
                             navController.navigate(route) {
-                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
                                 launchSingleTop = true
                                 restoreState = true
                             }
@@ -89,22 +81,16 @@ fun MainScreen(
             }
         }
     ) { padding ->
-        NavHost(navController, startDestination = "main_home", modifier = Modifier.padding(padding)) {
+        NavHost(
+            navController,
+            startDestination = "main_home",
+            modifier = Modifier.padding(padding)
+        ) {
             composable("main_home") {
                 HomeScreen(
                     token = token ?: "",
                     authViewModel = authViewModel,
-                    onNavigateToOrders = { navController.navigate("main_orders") },
-                    onNavigateToServices = { navController.navigate("main_services") },
-                    onSessionExpired = handleSessionExpired
-                )
-            }
-            composable("main_orders") {
-                OrderListScreen(
-                    token = token ?: "",
-                    onNavigateToDetail = onNavigateToOrderDetail,
-                    onNavigateToCreate = onNavigateToOrderCreate,
-                    onSessionExpired = handleSessionExpired
+                    onNavigateToServices = { navController.navigate("main_services") }
                 )
             }
             composable("main_services") {

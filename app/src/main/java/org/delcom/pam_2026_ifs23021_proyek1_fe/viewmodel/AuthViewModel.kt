@@ -35,7 +35,6 @@ class AuthViewModel @Inject constructor(
     val userId: StateFlow<String?> = repo.userId
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    // Dark mode preference
     private val _isDarkMode = MutableStateFlow(false)
     val isDarkMode: StateFlow<Boolean> = _isDarkMode.asStateFlow()
 
@@ -48,8 +47,7 @@ class AuthViewModel @Inject constructor(
             _uiState.value = AuthUiState(isLoading = true)
             repo.login(username, password).fold(
                 onSuccess = { response ->
-                    val token = response.data?.authToken
-                    if (token != null) {
+                    if (response.data?.authToken != null) {
                         _uiState.value = AuthUiState(isLoggedIn = true)
                     } else {
                         _uiState.value = AuthUiState(error = response.message ?: "Login gagal")
@@ -86,6 +84,8 @@ class AuthViewModel @Inject constructor(
     }
 
     fun clearMessages() {
-        _uiState.value = _uiState.value.copy(error = null, successMessage = null, isLoggedIn = false)
+        _uiState.value = _uiState.value.copy(
+            error = null, successMessage = null, isLoggedIn = false
+        )
     }
 }
